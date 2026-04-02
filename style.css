@@ -256,6 +256,13 @@ output {
   margin-top: var(--space-4);
 }
 
+.clear-action {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
 .clear-button {
   border: 1px solid var(--color-border);
   border-radius: 999px;
@@ -278,6 +285,25 @@ output {
 .limit-note {
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
+}
+
+.shortcut-hint {
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  font-family: "Courier New", Courier, monospace;
+  white-space: nowrap;
+}
+
+.shortcut-hint kbd {
+  display: inline-block;
+  min-width: 2ch;
+  padding: 0.1rem 0.35rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.4rem;
+  background: var(--color-surface-strong);
+  color: var(--color-text-muted);
+  font: inherit;
+  text-align: center;
 }
 
 .progress-section {

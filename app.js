@@ -235,6 +235,17 @@
       render(textarea.value);
     });
 
+    document.addEventListener("keydown", function (event) {
+      var isShortcutPressed = event.shiftKey && event.key === "Delete" && (event.metaKey || event.ctrlKey);
+
+      if (!isShortcutPressed) {
+        return;
+      }
+
+      event.preventDefault();
+      clearButton.click();
+    });
+
     clearButton.addEventListener("click", function () {
       textarea.value = "";
       render("");
