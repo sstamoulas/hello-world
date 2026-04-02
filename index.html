@@ -12,7 +12,7 @@
         <p class="eyebrow">Offline Writing Utility</p>
         <h1>Real-Time Text Analyzer</h1>
         <p class="intro">
-          Inspect live writing metrics instantly with a self-contained analyzer that runs directly from
+          Analyze live writing metrics instantly in a self-contained page that runs directly from
           your filesystem.
         </p>
       </header>
@@ -21,80 +21,83 @@
         <section class="panel editor-panel" aria-labelledby="input-label">
           <div class="panel-header">
             <h2 id="input-label">Input Text</h2>
-            <p>Paste or type any passage below to update the dashboard in real time.</p>
+            <p>Type or paste any passage below to update every metric as you write.</p>
           </div>
 
           <label class="visually-hidden" for="input-text">Text to analyze</label>
           <textarea
             id="input-text"
-            rows="16"
+            rows="12"
             placeholder="Start typing here to see live statistics..."
             spellcheck="false"
           ></textarea>
+
+          <div class="editor-tools">
+            <button class="clear-button" id="clear-button" type="button">Clear</button>
+            <p class="limit-note">Soft limit: 5,000 characters</p>
+          </div>
+
+          <section class="progress-section" aria-labelledby="progress-heading">
+            <div class="progress-header">
+              <h2 id="progress-heading">Character Usage</h2>
+              <output data-stat="charCount">0</output>
+            </div>
+            <div class="progress-track" aria-hidden="true">
+              <div class="progress-bar" id="progress-bar"></div>
+            </div>
+          </section>
         </section>
 
-        <section class="panel stats-panel" id="stats" aria-labelledby="stats-heading">
+        <section class="panel stats-panel" aria-labelledby="stats-heading">
           <div class="panel-header">
             <h2 id="stats-heading">Live Statistics</h2>
-            <p>Every card maps directly to a computed metric from the analysis engine.</p>
+            <p>Each value is bound to the output of the pure analysis engine.</p>
           </div>
 
-          <div class="stats-grid">
-            <div class="stat-card" data-stat="charCount">
-              <span class="stat-value">—</span>
-              <span class="stat-label">Characters</span>
-            </div>
+          <section class="stats-grid" aria-label="Text statistics">
+            <article class="stat-card">
+              <h3 class="stat-label">Characters</h3>
+              <output class="stat-value" data-stat="charCount">0</output>
+            </article>
 
-            <div class="stat-card" data-stat="charCountNoSpaces">
-              <span class="stat-value">—</span>
-              <span class="stat-label">Characters No Spaces</span>
-            </div>
+            <article class="stat-card">
+              <h3 class="stat-label">Characters No Spaces</h3>
+              <output class="stat-value" data-stat="charNoSpaces">0</output>
+            </article>
 
-            <div class="stat-card" data-stat="wordCount">
-              <span class="stat-value">—</span>
-              <span class="stat-label">Words</span>
-            </div>
+            <article class="stat-card">
+              <h3 class="stat-label">Words</h3>
+              <output class="stat-value" data-stat="wordCount">0</output>
+            </article>
 
-            <div class="stat-card" data-stat="uniqueWordCount">
-              <span class="stat-value">—</span>
-              <span class="stat-label">Unique Words</span>
-            </div>
+            <article class="stat-card">
+              <h3 class="stat-label">Sentences</h3>
+              <output class="stat-value" data-stat="sentenceCount">0</output>
+            </article>
 
-            <div class="stat-card" data-stat="sentenceCount">
-              <span class="stat-value">—</span>
-              <span class="stat-label">Sentences</span>
-            </div>
+            <article class="stat-card">
+              <h3 class="stat-label">Paragraphs</h3>
+              <output class="stat-value" data-stat="paragraphCount">0</output>
+            </article>
 
-            <div class="stat-card" data-stat="paragraphCount">
-              <span class="stat-value">—</span>
-              <span class="stat-label">Paragraphs</span>
-            </div>
+            <article class="stat-card">
+              <h3 class="stat-label">Average Word Length</h3>
+              <output class="stat-value" data-stat="avgWordLength">0.0</output>
+            </article>
 
-            <div class="stat-card" data-stat="avgWordsPerSentence">
-              <span class="stat-value">—</span>
-              <span class="stat-label">Avg Words / Sentence</span>
-            </div>
+            <article class="stat-card">
+              <h3 class="stat-label">Reading Time</h3>
+              <output class="stat-value" data-stat="readingTime">&lt; 1 min</output>
+            </article>
+          </section>
 
-            <div class="stat-card" data-stat="readingTimeSec">
-              <span class="stat-value">—</span>
-              <span class="stat-label">Reading Time</span>
+          <section class="top-words-panel" aria-labelledby="top-words-heading">
+            <div class="panel-header compact">
+              <h2 id="top-words-heading">Top 5 Words</h2>
+              <p>Common stop-words are excluded from this list.</p>
             </div>
-
-            <div class="stat-card" data-stat="speakingTimeSec">
-              <span class="stat-value">—</span>
-              <span class="stat-label">Speaking Time</span>
-            </div>
-
-            <div class="stat-card" data-stat="longestWord">
-              <span class="stat-value">—</span>
-              <span class="stat-label">Longest Word</span>
-            </div>
-
-            <div class="stat-card" data-stat="topWords">
-              <span class="stat-value">—</span>
-              <span class="stat-label">Top Words</span>
-            </div>
-          </div>
+            <output class="top-words-output" data-stat="topWords">No top words yet.</output>
+          </section>
         </section>
       </section>
     </main>

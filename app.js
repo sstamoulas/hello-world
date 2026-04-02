@@ -1,103 +1,66 @@
 (function () {
   "use strict";
 
-  function formatTime(seconds) {
-    var minutes;
-    var remainingSeconds;
-
-    if (!seconds) {
-      return "0s";
-    }
-
-    if (seconds < 60) {
-      return String(seconds) + "s";
-    }
-
-    minutes = Math.floor(seconds / 60);
-    remainingSeconds = seconds % 60;
-
-    if (!remainingSeconds) {
-      return String(minutes) + "m";
-    }
-
-    return String(minutes) + "m " + String(remainingSeconds) + "s";
-  }
+  var SOFT_LIMIT = 5000;
 
   function formatTopWords(topWords) {
     var parts = [];
     var index;
 
     for (index = 0; index < topWords.length; index += 1) {
-      parts.push(topWords[index].word + " ×" + String(topWords[index].count));
+      parts.push(topWords[index].word + " (" + String(topWords[index].count) + ")");
     }
 
-    return parts.join(", ");
+    return parts.length ? parts.join(", ") : "No top words yet.";
   }
 
   document.addEventListener("DOMContentLoaded", function () {
     var textarea = document.getElementById("input-text");
-    var statCards = document.querySelectorAll(".stat-card");
-    var debounceTimer;
+    var clearButton = document.getElementById("clear-button");
+    var progressBar = document.getElementById("progress-bar");
+    var outputs = document.querySelectorAll("[data-stat]");
 
-    function getDisplayValue(statName, analysis, isEmpty) {
-      var value = analysis[statName];
+    function updateProgress(charCount) {
+      var percentage = Math.min((charCount / SOFT_LIMIT) * 100, 100);
 
-      if (isEmpty) {
-        return "—";
-      }
-
-      if (statName === "readingTimeSec" || statName === "speakingTimeSec") {
-        return formatTime(value);
-      }
-
-      if (statName === "topWords") {
-        return value.length ? formatTopWords(value) : "—";
-      }
-
-      if (statName === "longestWord") {
-        return value || "—";
-      }
-
-      return String(value);
+      progressBar.style.width = String(percentage) + "%";
+      progressBar.classList.toggle("warn", charCount >= 4000 && charCount < SOFT_LIMIT);
+      progressBar.classList.toggle("danger", charCount >= SOFT_LIMIT);
     }
 
-    function isActiveValue(statName, analysis) {
-      var value = analysis[statName];
-
+    function getDisplayValue(statName, analysis) {
       if (statName === "topWords") {
-        return value.length > 0;
+        return formatTopWords(analysis.topWords);
       }
 
-      if (statName === "longestWord") {
-        return Boolean(value);
-      }
-
-      return value !== 0;
+      return String(analysis[statName]);
     }
 
-    function render() {
-      var analysis = window.TextAnalyzer.analyze(textarea.value);
-      var isEmpty = analysis.wordCount === 0;
+    function render(text) {
+      var analysis = window.Analyzer.analyze(text);
       var index;
-      var card;
-      var valueElement;
+      var output;
       var statName;
 
-      for (index = 0; index < statCards.length; index += 1) {
-        card = statCards[index];
-        valueElement = card.querySelector(".stat-value");
-        statName = card.getAttribute("data-stat");
-
-        valueElement.innerText = getDisplayValue(statName, analysis, isEmpty);
-        card.classList.toggle("is-active", !isEmpty && isActiveValue(statName, analysis));
+      for (index = 0; index < outputs.length; index += 1) {
+        output = outputs[index];
+        statName = output.getAttribute("data-stat");
+        output.textContent = getDisplayValue(statName, analysis);
       }
+
+      updateProgress(analysis.charCount);
     }
 
     textarea.addEventListener("input", function () {
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(render, 150);
+      render(textarea.value);
     });
 
-    render();
+    clearButton.addEventListener("click", function () {
+      textarea.value = "";
+      render("");
+      textarea.focus();
+    });
+
+    render(textarea.value);
   });
 }());
