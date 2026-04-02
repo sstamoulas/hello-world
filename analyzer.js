@@ -83,6 +83,63 @@
     }).length;
   }
 
+  function countSyllables(word) {
+    var normalizedWord = word.toLowerCase().replace(/[^a-z]/g, "");
+    var matches;
+
+    if (!normalizedWord.length) {
+      return 0;
+    }
+
+    if (normalizedWord.length <= 3) {
+      return 1;
+    }
+
+    normalizedWord = normalizedWord.replace(/e$/, "");
+    matches = normalizedWord.match(/[aeiouy]+/g);
+
+    return Math.max(1, matches ? matches.length : 1);
+  }
+
+  function getSyllableCount(words) {
+    var total = 0;
+    var index;
+
+    for (index = 0; index < words.length; index += 1) {
+      total += countSyllables(words[index]);
+    }
+
+    return total;
+  }
+
+  function clampScore(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
+
+  function getFleschReadingEase(wordCount, sentenceCount, syllableCount) {
+    var score;
+
+    if (wordCount === 0 || sentenceCount === 0) {
+      return null;
+    }
+
+    score = 206.835 - (1.015 * (wordCount / sentenceCount)) - (84.6 * (syllableCount / wordCount));
+
+    return clampScore(score, 0, 100);
+  }
+
+  function getFleschKincaidGrade(wordCount, sentenceCount, syllableCount) {
+    var grade;
+
+    if (wordCount === 0 || sentenceCount === 0) {
+      return null;
+    }
+
+    grade = (0.39 * (wordCount / sentenceCount)) + (11.8 * (syllableCount / wordCount)) - 15.59;
+
+    return clampScore(grade, 0, 18);
+  }
+
   function getAverageWordLength(words) {
     var total = 0;
     var index;
@@ -157,16 +214,21 @@
   function analyze(text) {
     var value = normalizeText(text);
     var words = getWords(value);
+    var sentenceCount = getSentenceCount(value);
+    var syllableCount = getSyllableCount(words);
 
     return {
       charCount: value.length,
       charNoSpaces: value.replace(/\s/g, "").length,
       wordCount: words.length,
-      sentenceCount: getSentenceCount(value),
+      sentenceCount: sentenceCount,
       paragraphCount: getParagraphCount(value),
       avgWordLength: getAverageWordLength(words),
       readingTime: getReadingTime(words.length),
-      topWords: getTopWords(words)
+      topWords: getTopWords(words),
+      syllableCount: syllableCount,
+      fleschReadingEase: getFleschReadingEase(words.length, sentenceCount, syllableCount),
+      fleschKincaidGrade: getFleschKincaidGrade(words.length, sentenceCount, syllableCount)
     };
   }
 
