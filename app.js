@@ -82,6 +82,41 @@
     return element.textContent || "";
   }
 
+  function getReadabilityBand(score) {
+    if (score >= 90) {
+      return {
+        label: "Very Easy",
+        className: "fre-very-easy"
+      };
+    }
+
+    if (score >= 70) {
+      return {
+        label: "Easy",
+        className: "fre-easy"
+      };
+    }
+
+    if (score >= 60) {
+      return {
+        label: "Standard",
+        className: "fre-standard"
+      };
+    }
+
+    if (score >= 30) {
+      return {
+        label: "Difficult",
+        className: "fre-difficult"
+      };
+    }
+
+    return {
+      label: "Very Difficult",
+      className: "fre-hard"
+    };
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     var textarea = document.getElementById("input-text");
     var clearButton = document.getElementById("clear-button");
@@ -93,6 +128,7 @@
     var wordCountOutput = document.querySelector('[data-stat="wordCount"]');
     var outputs = document.querySelectorAll("[data-stat]");
     var topWordsOutput = document.querySelector('[data-stat="topWords"]');
+    var readabilityOutput = document.getElementById("readability-score");
     var currentTheme = getStoredTheme();
     var copyResetTimer = null;
 
@@ -183,6 +219,11 @@
         "Reading Time: " + getOutputText(document.querySelector('[data-stat="readingTime"]')),
         "Top 5 Words: " + getOutputText(topWordsOutput)
       ];
+      var readabilityText = getOutputText(readabilityOutput);
+
+      if (readabilityText) {
+        lines.push(readabilityText);
+      }
 
       return lines.join("\n");
     }
@@ -250,6 +291,27 @@
       return String(analysis[statName]);
     }
 
+    function renderReadability(analysis) {
+      var band;
+      var scoreText;
+      var gradeText;
+
+      if (analysis.fleschReadingEase === null) {
+        readabilityOutput.textContent = "";
+        readabilityOutput.className = "";
+        readabilityOutput.hidden = true;
+        return;
+      }
+
+      band = getReadabilityBand(analysis.fleschReadingEase);
+      scoreText = analysis.fleschReadingEase.toFixed(1);
+      gradeText = String(Math.round(analysis.fleschKincaidGrade));
+
+      readabilityOutput.textContent = "Readability: " + scoreText + " | Grade Level: " + gradeText + " | " + band.label;
+      readabilityOutput.className = band.className;
+      readabilityOutput.hidden = false;
+    }
+
     function render(text) {
       var analysis = window.Analyzer.analyze(text);
       var index;
@@ -262,6 +324,7 @@
         output.textContent = getDisplayValue(statName, analysis);
       }
 
+      renderReadability(analysis);
       updateProgress(analysis.charCount);
       updateWordGoalIndicator(analysis.wordCount);
       setCopyButtonIdleState();
