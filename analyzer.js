@@ -1,182 +1,184 @@
-const STOPWORDS = new Set([
-  "a",
-  "about",
-  "above",
-  "after",
-  "again",
-  "against",
-  "all",
-  "am",
-  "an",
-  "and",
-  "any",
-  "are",
-  "as",
-  "at",
-  "be",
-  "because",
-  "been",
-  "before",
-  "being",
-  "below",
-  "between",
-  "both",
-  "but",
-  "by",
-  "could",
-  "did",
-  "do",
-  "does",
-  "doing",
-  "down",
-  "during",
-  "each",
-  "few",
-  "for",
-  "from",
-  "further",
-  "had",
-  "has",
-  "have",
-  "having",
-  "he",
-  "her",
-  "here",
-  "hers",
-  "herself",
-  "him",
-  "himself",
-  "his",
-  "how",
-  "i",
-  "if",
-  "in",
-  "into",
-  "is",
-  "it",
-  "its",
-  "itself",
-  "just",
-  "me",
-  "more",
-  "most",
-  "my",
-  "myself",
-  "no",
-  "nor",
-  "not",
-  "now",
-  "of",
-  "off",
-  "on",
-  "once",
-  "only",
-  "or",
-  "other",
-  "our",
-  "ours",
-  "ourselves",
-  "out",
-  "over",
-  "own",
-  "same",
-  "she",
-  "should",
-  "so",
-  "some",
-  "such",
-  "than",
-  "that",
-  "the",
-  "their",
-  "theirs",
-  "them",
-  "themselves",
-  "then",
-  "there",
-  "these",
-  "they",
-  "this",
-  "those",
-  "through",
-  "to",
-  "too",
-  "under",
-  "until",
-  "up",
-  "very",
-  "was",
-  "we",
-  "were",
-  "what",
-  "when",
-  "where",
-  "which",
-  "while",
-  "who",
-  "whom",
-  "why",
-  "with",
-  "would",
-  "you",
-  "your",
-  "yours",
-  "yourself",
-  "yourselves"
-]);
+(function () {
+  var STOP_WORDS = {
+    a: true,
+    an: true,
+    the: true,
+    and: true,
+    or: true,
+    but: true,
+    in: true,
+    on: true,
+    at: true,
+    to: true,
+    for: true,
+    of: true,
+    is: true,
+    it: true,
+    as: true,
+    be: true,
+    was: true,
+    are: true,
+    with: true,
+    that: true,
+    this: true,
+    have: true,
+    from: true,
+    by: true,
+    not: true
+  };
 
-function getWords(text) {
-  return text.trim().split(/\s+/).filter(Boolean);
-}
-
-function getNormalizedWords(text) {
-  return (text.toLowerCase().match(/[a-z0-9']+/g) || []).filter(Boolean);
-}
-
-export function analyze(text) {
-  const words = getWords(text);
-  const normalizedWords = getNormalizedWords(text);
-  const sentences = text
-    .split(/[.!?]+/)
-    .map((sentence) => sentence.trim())
-    .filter(Boolean);
-  const paragraphs = text
-    .split(/\n\s*\n/)
-    .map((paragraph) => paragraph.trim())
-    .filter(Boolean);
-  const wordLengths = normalizedWords.reduce((total, word) => total + word.length, 0);
-  const frequencyMap = new Map();
-
-  for (const word of normalizedWords) {
-    if (STOPWORDS.has(word)) {
-      continue;
-    }
-
-    frequencyMap.set(word, (frequencyMap.get(word) || 0) + 1);
+  function trim(text) {
+    return String(text || "").replace(/^\s+|\s+$/g, "");
   }
 
-  const topWords = Array.from(frequencyMap.entries())
-    .sort((left, right) => {
-      if (right[1] !== left[1]) {
-        return right[1] - left[1];
+  function getWords(text) {
+    var value = trim(text);
+
+    if (!value) {
+      return [];
+    }
+
+    return value.split(/\s+/);
+  }
+
+  function getNormalizedWords(text) {
+    var matches = String(text || "").toLowerCase().match(/[a-z0-9']+/g);
+    return matches || [];
+  }
+
+  function roundToOneDecimal(value) {
+    return Math.round(value * 10) / 10;
+  }
+
+  function charCount(text) {
+    return String(text || "").length;
+  }
+
+  function charCountNoSpaces(text) {
+    return String(text || "").replace(/\s/g, "").length;
+  }
+
+  function wordCount(text) {
+    return getWords(text).length;
+  }
+
+  function sentenceCount(text) {
+    var value = trim(text);
+    var sentences;
+
+    if (!value) {
+      return 0;
+    }
+
+    sentences = value.split(/[.!?]+/).filter(function (sentence) {
+      return trim(sentence).length > 0;
+    });
+
+    return sentences.length || 1;
+  }
+
+  function paragraphCount(text) {
+    var value = trim(text);
+    var paragraphs;
+
+    if (!value) {
+      return 0;
+    }
+
+    paragraphs = value.split(/\n\s*\n+/).filter(function (paragraph) {
+      return trim(paragraph).length > 0;
+    });
+
+    return paragraphs.length || 1;
+  }
+
+  function readingTime(text) {
+    var words = wordCount(text);
+    var minutes;
+
+    if (words < 200) {
+      return "< 1 min";
+    }
+
+    minutes = Math.ceil(words / 200);
+    return String(minutes) + " min";
+  }
+
+  function avgWordLength(text) {
+    var words = getNormalizedWords(text);
+    var total = 0;
+    var index;
+
+    if (!words.length) {
+      return 0;
+    }
+
+    for (index = 0; index < words.length; index += 1) {
+      total += words[index].length;
+    }
+
+    return roundToOneDecimal(total / words.length);
+  }
+
+  function topWords(text, n) {
+    var limit = typeof n === "number" ? n : 5;
+    var words = getNormalizedWords(text);
+    var counts = {};
+    var order = [];
+    var index;
+    var word;
+    var pairs = [];
+
+    for (index = 0; index < words.length; index += 1) {
+      word = words[index];
+
+      if (STOP_WORDS[word]) {
+        continue;
       }
 
-      return left[0].localeCompare(right[0]);
-    })
-    .slice(0, 10)
-    .map(([word, count]) => ({ word, count }));
+      if (!counts[word]) {
+        counts[word] = 0;
+        order.push(word);
+      }
 
-  const readingTimeSec = Math.round((words.length / 200) * 60);
+      counts[word] += 1;
+    }
 
-  return {
-    charCount: text.length,
-    charCountNoSpaces: text.replace(/\s/g, "").length,
-    wordCount: words.length,
-    sentenceCount: sentences.length,
-    paragraphCount: paragraphs.length,
-    avgWordLength: normalizedWords.length ? Number((wordLengths / normalizedWords.length).toFixed(1)) : 0,
-    readingTimeSec,
-    uniqueWordCount: new Set(normalizedWords).size,
-    topWords
+    for (index = 0; index < order.length; index += 1) {
+      word = order[index];
+      pairs.push({
+        word: word,
+        count: counts[word]
+      });
+    }
+
+    pairs.sort(function (left, right) {
+      if (right.count !== left.count) {
+        return right.count - left.count;
+      }
+
+      if (left.word < right.word) {
+        return -1;
+      }
+
+      if (left.word > right.word) {
+        return 1;
+      }
+
+      return 0;
+    });
+
+    return pairs.slice(0, limit);
+  }
+
+  window.Analyzer = {
+    charCount: charCount,
+    charCountNoSpaces: charCountNoSpaces,
+    wordCount: wordCount,
+    sentenceCount: sentenceCount,
+    paragraphCount: paragraphCount,
+    readingTime: readingTime,
+    avgWordLength: avgWordLength,
+    topWords: topWords
   };
-}
+}());

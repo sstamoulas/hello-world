@@ -4,75 +4,79 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Real-Time Text Analyzer</title>
-    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="style.css">
   </head>
   <body>
-    <main class="app-shell">
-      <header class="app-header">
-        <div>
-          <p class="eyebrow">Offline Utility</p>
+    <main class="app">
+      <header class="hero">
+        <div class="hero__copy">
+          <p class="hero__eyebrow">Client-Side Utility</p>
           <h1>Real-Time Text Analyzer</h1>
+          <p class="hero__intro">Paste or type text to inspect structure, pacing, and repeated vocabulary as you write.</p>
         </div>
-        <button id="clear-btn" type="button">Clear</button>
+        <div class="toolbar">
+          <button id="clear-button" type="button">Clear</button>
+        </div>
       </header>
 
-      <section class="app-grid" aria-label="Text analysis workspace">
-        <div class="editor-panel card">
-          <label class="panel-title" for="text-input">Text Input</label>
+      <section class="workspace" aria-label="Text analysis workspace">
+        <section class="panel panel--editor" aria-labelledby="text-input-label">
+          <div class="panel__header">
+            <h2 id="text-input-label">Text Input</h2>
+          </div>
           <textarea
             id="text-input"
-            aria-label="Enter text to analyze"
-            placeholder="Type or paste text here to see live analysis..."
+            placeholder="Type or paste text here to see live statistics..."
+            aria-describedby="text-input-hint"
           ></textarea>
-        </div>
+          <p id="text-input-hint" class="panel__hint">All analysis runs instantly in your browser. No network requests, no uploads.</p>
+        </section>
 
-        <div class="stats-panel">
-          <section class="stats-grid" aria-label="Text statistics">
-            <article class="stat-card card">
-              <span class="stat-label">Words</span>
-              <output id="word-count" for="text-input">0</output>
-            </article>
-            <article class="stat-card card">
-              <span class="stat-label">Characters</span>
-              <output id="char-count" for="text-input">0</output>
-            </article>
-            <article class="stat-card card">
-              <span class="stat-label">No Spaces</span>
-              <output id="char-count-no-spaces" for="text-input">0</output>
-            </article>
-            <article class="stat-card card">
-              <span class="stat-label">Sentences</span>
-              <output id="sentence-count" for="text-input">0</output>
-            </article>
-            <article class="stat-card card">
-              <span class="stat-label">Paragraphs</span>
-              <output id="paragraph-count" for="text-input">0</output>
-            </article>
-            <article class="stat-card card">
-              <span class="stat-label">Reading Time</span>
-              <output id="reading-time" for="text-input">0 min</output>
-            </article>
-            <article class="stat-card card">
-              <span class="stat-label">Avg Word Length</span>
-              <output id="avg-word-length" for="text-input">0.0</output>
-            </article>
-            <article class="stat-card card">
-              <span class="stat-label">Unique Words</span>
-              <output id="unique-word-count" for="text-input">0</output>
-            </article>
-          </section>
-
-          <section class="card top-words-card" aria-labelledby="top-words-heading">
-            <div class="top-words-header">
-              <h2 id="top-words-heading">Top Words</h2>
-              <span id="top-words-summary" role="status" aria-live="polite">No words yet</span>
+        <section class="panel panel--stats" aria-label="Text statistics">
+          <div class="stats-grid">
+            <div class="card" data-metric="wordCount">
+              <span class="card__value">0</span>
+              <span class="card__label">Words</span>
             </div>
-            <ul id="top-words" class="top-words-list" aria-live="polite"></ul>
+            <div class="card" data-metric="charCount">
+              <span class="card__value">0</span>
+              <span class="card__label">Characters</span>
+            </div>
+            <div class="card" data-metric="charCountNoSpaces">
+              <span class="card__value">0</span>
+              <span class="card__label">Characters (No Spaces)</span>
+            </div>
+            <div class="card" data-metric="sentenceCount">
+              <span class="card__value">0</span>
+              <span class="card__label">Sentences</span>
+            </div>
+            <div class="card" data-metric="paragraphCount">
+              <span class="card__value">0</span>
+              <span class="card__label">Paragraphs</span>
+            </div>
+            <div class="card" data-metric="readingTime">
+              <span class="card__value">&lt; 1 min</span>
+              <span class="card__label">Reading Time</span>
+            </div>
+            <div class="card" data-metric="avgWordLength">
+              <span class="card__value">0.0</span>
+              <span class="card__label">Average Word Length</span>
+            </div>
+          </div>
+
+          <section class="panel panel--top-words" aria-labelledby="top-words-heading">
+            <div class="panel__header">
+              <h2 id="top-words-heading">Top Words</h2>
+            </div>
+            <ol id="top-words" class="top-words" aria-live="polite">
+              <li class="top-words__empty">No repeated words yet.</li>
+            </ol>
           </section>
-        </div>
+        </section>
       </section>
     </main>
 
-    <script type="module" src="./app.js"></script>
+    <script src="analyzer.js"></script>
+    <script src="app.js"></script>
   </body>
 </html>
