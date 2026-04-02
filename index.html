@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Text Analyzer</title>
+    <link rel="stylesheet" href="./style.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="app-header">
+        <div>
+          <p class="eyebrow">Offline Utility</p>
+          <h1>Real-Time Text Analyzer</h1>
+        </div>
+        <button id="clear-btn" type="button">Clear</button>
+      </header>
+
+      <section class="app-grid" aria-label="Text analysis workspace">
+        <div class="editor-panel card">
+          <label class="panel-title" for="text-input">Text Input</label>
+          <textarea
+            id="text-input"
+            aria-label="Enter text to analyze"
+            placeholder="Type or paste text here to see live analysis..."
+          ></textarea>
+        </div>
+
+        <div class="stats-panel">
+          <section class="stats-grid" aria-label="Text statistics">
+            <article class="stat-card card">
+              <span class="stat-label">Words</span>
+              <output id="word-count" for="text-input">0</output>
+            </article>
+            <article class="stat-card card">
+              <span class="stat-label">Characters</span>
+              <output id="char-count" for="text-input">0</output>
+            </article>
+            <article class="stat-card card">
+              <span class="stat-label">No Spaces</span>
+              <output id="char-count-no-spaces" for="text-input">0</output>
+            </article>
+            <article class="stat-card card">
+              <span class="stat-label">Sentences</span>
+              <output id="sentence-count" for="text-input">0</output>
+            </article>
+            <article class="stat-card card">
+              <span class="stat-label">Paragraphs</span>
+              <output id="paragraph-count" for="text-input">0</output>
+            </article>
+            <article class="stat-card card">
+              <span class="stat-label">Reading Time</span>
+              <output id="reading-time" for="text-input">0 min</output>
+            </article>
+            <article class="stat-card card">
+              <span class="stat-label">Avg Word Length</span>
+              <output id="avg-word-length" for="text-input">0.0</output>
+            </article>
+            <article class="stat-card card">
+              <span class="stat-label">Unique Words</span>
+              <output id="unique-word-count" for="text-input">0</output>
+            </article>
+          </section>
+
+          <section class="card top-words-card" aria-labelledby="top-words-heading">
+            <div class="top-words-header">
+              <h2 id="top-words-heading">Top Words</h2>
+              <span id="top-words-summary" role="status" aria-live="polite">No words yet</span>
+            </div>
+            <ul id="top-words" class="top-words-list" aria-live="polite"></ul>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
