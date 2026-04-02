@@ -69,13 +69,125 @@
     return parts.length ? parts.join(", ") : "No top words yet.";
   }
 
+  function getOutputText(element) {
+    if (!element) {
+      return "";
+    }
+
+    if (typeof element.value === "string") {
+      return element.value;
+    }
+
+    return element.textContent || "";
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     var textarea = document.getElementById("input-text");
     var clearButton = document.getElementById("clear-button");
+    var copyButton = document.getElementById("copy-btn");
     var progressBar = document.getElementById("progress-bar");
     var themeToggle = document.getElementById("theme-toggle");
     var outputs = document.querySelectorAll("[data-stat]");
+    var topWordsOutput = document.querySelector('[data-stat="topWords"]');
     var currentTheme = getStoredTheme();
+    var copyResetTimer = null;
+
+    function clearCopyResetTimer() {
+      if (copyResetTimer) {
+        window.clearTimeout(copyResetTimer);
+        copyResetTimer = null;
+      }
+    }
+
+    function setCopyButtonIdleState() {
+      var hasText = textarea.value.trim().length > 0;
+
+      clearCopyResetTimer();
+      copyButton.textContent = "Copy to Clipboard";
+      copyButton.classList.remove("is-success");
+      copyButton.classList.remove("is-error");
+      copyButton.disabled = !hasText;
+
+      if (hasText) {
+        copyButton.removeAttribute("title");
+      } else {
+        copyButton.title = "Run analysis first";
+      }
+    }
+
+    function setCopyButtonFeedback(label, className, disableButton) {
+      clearCopyResetTimer();
+      copyButton.textContent = label;
+      copyButton.classList.toggle("is-success", className === "is-success");
+      copyButton.classList.toggle("is-error", className === "is-error");
+      copyButton.disabled = disableButton;
+
+      copyResetTimer = window.setTimeout(function () {
+        setCopyButtonIdleState();
+      }, 2000);
+    }
+
+    function getCopyText() {
+      var lines = [
+        "Characters: " + getOutputText(document.querySelector('[data-stat="charCount"]')),
+        "Characters No Spaces: " + getOutputText(document.querySelector('[data-stat="charNoSpaces"]')),
+        "Words: " + getOutputText(document.querySelector('[data-stat="wordCount"]')),
+        "Sentences: " + getOutputText(document.querySelector('[data-stat="sentenceCount"]')),
+        "Paragraphs: " + getOutputText(document.querySelector('[data-stat="paragraphCount"]')),
+        "Average Word Length: " + getOutputText(document.querySelector('[data-stat="avgWordLength"]')),
+        "Reading Time: " + getOutputText(document.querySelector('[data-stat="readingTime"]')),
+        "Top 5 Words: " + getOutputText(topWordsOutput)
+      ];
+
+      return lines.join("\n");
+    }
+
+    function fallbackCopy(text) {
+      var copyArea = document.createElement("textarea");
+
+      copyArea.value = text;
+      copyArea.setAttribute("readonly", "readonly");
+      copyArea.style.position = "fixed";
+      copyArea.style.top = "-9999px";
+      copyArea.style.left = "-9999px";
+      document.body.appendChild(copyArea);
+      copyArea.focus();
+      copyArea.select();
+
+      try {
+        if (document.execCommand("copy")) {
+          setCopyButtonFeedback("\u2713 Copied!", "is-success", true);
+          return;
+        }
+      } catch (error) {
+        // Fall through to the shared error state below.
+      } finally {
+        document.body.removeChild(copyArea);
+      }
+
+      setCopyButtonFeedback("Copy failed", "is-error", false);
+    }
+
+    function copyToClipboard() {
+      var text = getCopyText();
+
+      if (!text.trim()) {
+        setCopyButtonIdleState();
+        return;
+      }
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () {
+          setCopyButtonFeedback("\u2713 Copied!", "is-success", true);
+        }).catch(function () {
+          fallbackCopy(text);
+        });
+
+        return;
+      }
+
+      fallbackCopy(text);
+    }
 
     function updateProgress(charCount) {
       var percentage = Math.min((charCount / SOFT_LIMIT) * 100, 100);
@@ -106,6 +218,7 @@
       }
 
       updateProgress(analysis.charCount);
+      setCopyButtonIdleState();
     }
 
     applyTheme(currentTheme);
@@ -126,6 +239,10 @@
       textarea.value = "";
       render("");
       textarea.focus();
+    });
+
+    copyButton.addEventListener("click", function () {
+      copyToClipboard();
     });
 
     render(textarea.value);
