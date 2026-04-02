@@ -1,97 +1,114 @@
-import { analyze } from "./analyzer.js";
-
-const textInput = document.getElementById("text-input");
-const clearButton = document.getElementById("clear-btn");
-const outputs = {
-  charCount: document.getElementById("char-count"),
-  charCountNoSpaces: document.getElementById("char-count-no-spaces"),
-  wordCount: document.getElementById("word-count"),
-  sentenceCount: document.getElementById("sentence-count"),
-  paragraphCount: document.getElementById("paragraph-count"),
-  avgWordLength: document.getElementById("avg-word-length"),
-  readingTime: document.getElementById("reading-time"),
-  uniqueWordCount: document.getElementById("unique-word-count")
-};
-const topWordsList = document.getElementById("top-words");
-const topWordsSummary = document.getElementById("top-words-summary");
-
-function formatReadingTime(readingTimeSec) {
-  if (readingTimeSec === 0) {
-    return "0 min";
+(function () {
+  function byId(id) {
+    return document.getElementById(id);
   }
 
-  if (readingTimeSec < 60) {
-    return "< 1 min";
+  function setCardValue(card, value) {
+    var valueNode = card.querySelector(".card__value");
+    var nextValue = String(value);
+    var previousValue = valueNode.textContent;
+
+    if (previousValue === nextValue) {
+      return;
+    }
+
+    valueNode.textContent = nextValue;
+    card.classList.remove("card--updated");
+    if (card._updateTimer) {
+      clearTimeout(card._updateTimer);
+    }
+
+    void card.offsetWidth;
+    card.classList.add("card--updated");
+    card._updateTimer = setTimeout(function () {
+      card.classList.remove("card--updated");
+      card._updateTimer = null;
+    }, 600);
   }
 
-  return `${Math.round(readingTimeSec / 60)} min`;
-}
+  function renderTopWords(listNode, words) {
+    var fragment = document.createDocumentFragment();
+    var item;
+    var text;
+    var wordNode;
+    var countNode;
+    var index;
 
-function renderTopWords(topWords) {
-  topWordsList.replaceChildren();
+    listNode.innerHTML = "";
 
-  if (!topWords.length) {
-    const emptyItem = document.createElement("li");
-    emptyItem.className = "empty-state";
-    emptyItem.textContent = "Top non-stopword frequencies will appear here.";
-    topWordsList.append(emptyItem);
-    topWordsSummary.textContent = "No words yet";
-    return;
+    if (!words.length) {
+      item = document.createElement("li");
+      item.className = "top-words__empty";
+      item.textContent = "No repeated words yet.";
+      fragment.appendChild(item);
+      listNode.appendChild(fragment);
+      return;
+    }
+
+    for (index = 0; index < words.length; index += 1) {
+      item = document.createElement("li");
+      item.className = "top-words__item";
+
+      wordNode = document.createElement("span");
+      wordNode.className = "top-words__word";
+      wordNode.textContent = words[index].word;
+
+      text = document.createTextNode(" ");
+
+      countNode = document.createElement("span");
+      countNode.className = "top-words__count";
+      countNode.textContent = "(" + words[index].count + ")";
+
+      item.appendChild(wordNode);
+      item.appendChild(text);
+      item.appendChild(countNode);
+      fragment.appendChild(item);
+    }
+
+    listNode.appendChild(fragment);
   }
 
-  const highestCount = topWords[0].count;
-  const items = topWords.map(({ word, count }) => {
-    const listItem = document.createElement("li");
-    listItem.className = "top-word-item";
+  document.addEventListener("DOMContentLoaded", function () {
+    var textarea = byId("text-input");
+    var clearButton = byId("clear-button");
+    var topWordsList = byId("top-words");
+    var metricCards = {};
+    var metricNames = [
+      "wordCount",
+      "charCount",
+      "charCountNoSpaces",
+      "sentenceCount",
+      "paragraphCount",
+      "readingTime",
+      "avgWordLength"
+    ];
+    var index;
 
-    const row = document.createElement("div");
-    row.className = "top-word-row";
+    for (index = 0; index < metricNames.length; index += 1) {
+      metricCards[metricNames[index]] = document.querySelector('[data-metric="' + metricNames[index] + '"]');
+    }
 
-    const label = document.createElement("span");
-    label.className = "top-word-label";
-    label.textContent = word;
+    function updateMetrics() {
+      var text = textarea.value;
 
-    const badge = document.createElement("span");
-    badge.className = "top-word-count";
-    badge.textContent = count;
+      setCardValue(metricCards.wordCount, Analyzer.wordCount(text));
+      setCardValue(metricCards.charCount, Analyzer.charCount(text));
+      setCardValue(metricCards.charCountNoSpaces, Analyzer.charCountNoSpaces(text));
+      setCardValue(metricCards.sentenceCount, Analyzer.sentenceCount(text));
+      setCardValue(metricCards.paragraphCount, Analyzer.paragraphCount(text));
+      setCardValue(metricCards.readingTime, Analyzer.readingTime(text));
+      setCardValue(metricCards.avgWordLength, Analyzer.avgWordLength(text).toFixed(1));
 
-    const track = document.createElement("div");
-    track.className = "bar-track";
+      renderTopWords(topWordsList, Analyzer.topWords(text, 5));
+    }
 
-    const bar = document.createElement("div");
-    bar.className = "bar";
-    bar.style.width = `${(count / highestCount) * 100}%`;
+    textarea.addEventListener("input", updateMetrics);
+    clearButton.addEventListener("click", function () {
+      textarea.value = "";
+      updateMetrics();
+      textarea.focus();
+    });
 
-    row.append(label, badge);
-    track.append(bar);
-    listItem.append(row, track);
-
-    return listItem;
+    updateMetrics();
   });
-
-  topWordsList.append(...items);
-  topWordsSummary.textContent = `${topWords.length} tracked`;
-}
-
-function updateView() {
-  const result = analyze(textInput.value);
-
-  outputs.charCount.textContent = result.charCount;
-  outputs.charCountNoSpaces.textContent = result.charCountNoSpaces;
-  outputs.wordCount.textContent = result.wordCount;
-  outputs.sentenceCount.textContent = result.sentenceCount;
-  outputs.paragraphCount.textContent = result.paragraphCount;
-  outputs.avgWordLength.textContent = result.avgWordLength.toFixed(1);
-  outputs.readingTime.textContent = formatReadingTime(result.readingTimeSec);
-  outputs.uniqueWordCount.textContent = result.uniqueWordCount;
-
-  renderTopWords(result.topWords);
-}
-
-textInput.addEventListener("input", updateView);
-clearButton.addEventListener("click", () => {
-  textInput.value = "";
-  textInput.dispatchEvent(new Event("input"));
-});
-
-updateView();
+}());
