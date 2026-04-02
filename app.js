@@ -1,63 +1,103 @@
 (function () {
   "use strict";
 
-  function formatReadingTime(seconds) {
+  function formatTime(seconds) {
     var minutes;
     var remainingSeconds;
 
-    if (!seconds || seconds < 60) {
-      return "< 1 min";
+    if (!seconds) {
+      return "0s";
     }
 
-    if (seconds === 60) {
-      return "1 min";
-    }
-
-    if (seconds < 120) {
-      return "1 min " + String(seconds - 60) + " sec";
+    if (seconds < 60) {
+      return String(seconds) + "s";
     }
 
     minutes = Math.floor(seconds / 60);
     remainingSeconds = seconds % 60;
 
-    if (remainingSeconds > 0) {
-      return String(minutes) + " min " + String(remainingSeconds) + " sec";
+    if (!remainingSeconds) {
+      return String(minutes) + "m";
     }
 
-    return String(minutes) + " min";
+    return String(minutes) + "m " + String(remainingSeconds) + "s";
   }
 
-  function formatStatValue(key, value) {
-    if (key === "readingTimeSeconds") {
-      return formatReadingTime(value);
+  function formatTopWords(topWords) {
+    var parts = [];
+    var index;
+
+    for (index = 0; index < topWords.length; index += 1) {
+      parts.push(topWords[index].word + " ×" + String(topWords[index].count));
     }
 
-    return String(value);
+    return parts.join(", ");
   }
 
   document.addEventListener("DOMContentLoaded", function () {
     var textarea = document.getElementById("input-text");
-    var statElements = document.querySelectorAll("[data-stat]");
+    var statCards = document.querySelectorAll(".stat-card");
+    var debounceTimer;
 
-    function render() {
-      var value = textarea.value;
-      var analysis = window.TextAnalyzer.analyze(value);
-      var isEmpty = !value.replace(/\s/g, "");
-      var index;
-      var statElement;
-      var statKey;
+    function getDisplayValue(statName, analysis, isEmpty) {
+      var value = analysis[statName];
 
-      for (index = 0; index < statElements.length; index += 1) {
-        statElement = statElements[index];
-        statKey = statElement.getAttribute("data-stat");
-        statElement.innerText = formatStatValue(statKey, analysis[statKey]);
+      if (isEmpty) {
+        return "—";
       }
 
-      document.body.classList.toggle("empty", isEmpty);
+      if (statName === "readingTimeSec" || statName === "speakingTimeSec") {
+        return formatTime(value);
+      }
+
+      if (statName === "topWords") {
+        return value.length ? formatTopWords(value) : "—";
+      }
+
+      if (statName === "longestWord") {
+        return value || "—";
+      }
+
+      return String(value);
     }
 
-    textarea.addEventListener("input", render);
-    textarea.value = "";
+    function isActiveValue(statName, analysis) {
+      var value = analysis[statName];
+
+      if (statName === "topWords") {
+        return value.length > 0;
+      }
+
+      if (statName === "longestWord") {
+        return Boolean(value);
+      }
+
+      return value !== 0;
+    }
+
+    function render() {
+      var analysis = window.TextAnalyzer.analyze(textarea.value);
+      var isEmpty = analysis.wordCount === 0;
+      var index;
+      var card;
+      var valueElement;
+      var statName;
+
+      for (index = 0; index < statCards.length; index += 1) {
+        card = statCards[index];
+        valueElement = card.querySelector(".stat-value");
+        statName = card.getAttribute("data-stat");
+
+        valueElement.innerText = getDisplayValue(statName, analysis, isEmpty);
+        card.classList.toggle("is-active", !isEmpty && isActiveValue(statName, analysis));
+      }
+    }
+
+    textarea.addEventListener("input", function () {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(render, 150);
+    });
+
     render();
   });
 }());
