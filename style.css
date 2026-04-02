@@ -1,17 +1,28 @@
 :root {
-  --color-bg: #f5efe4;
-  --color-bg-accent: rgba(240, 183, 114, 0.26);
-  --color-surface: rgba(255, 251, 245, 0.92);
-  --color-surface-strong: #fffaf2;
-  --color-border: rgba(104, 80, 50, 0.18);
-  --color-text: #2d2318;
-  --color-text-muted: #68553f;
-  --color-primary: #24695a;
-  --color-primary-soft: rgba(36, 105, 90, 0.14);
+  --color-bg: #171410;
+  --color-bg-start: #15120f;
+  --color-bg-accent: rgba(227, 124, 104, 0.12);
+  --color-bg-accent-secondary: rgba(141, 202, 182, 0.1);
+  --color-surface: rgba(38, 31, 25, 0.9);
+  --color-surface-strong: #2b241e;
+  --color-surface-card: rgba(47, 39, 32, 0.92);
+  --color-border: rgba(226, 198, 165, 0.16);
+  --color-text: #f5e9da;
+  --color-text-muted: #cfbaa0;
+  --color-text-placeholder: rgba(207, 186, 160, 0.7);
+  --color-primary: #8dcab6;
+  --color-primary-soft: rgba(141, 202, 182, 0.18);
+  --color-button-hover-border: rgba(141, 202, 182, 0.35);
+  --color-button-hover-bg: rgba(141, 202, 182, 0.08);
+  --color-progress-start: #4eb270;
   --color-progress: #2d8a5d;
+  --color-progress-warn-start: #efc46a;
   --color-progress-warn: #d28a1f;
+  --color-progress-danger-start: #e37c68;
   --color-progress-danger: #c4513f;
-  --color-shadow: rgba(61, 43, 20, 0.12);
+  --color-track: rgba(207, 186, 160, 0.16);
+  --color-shadow: rgba(0, 0, 0, 0.3);
+  --color-input-shadow: rgba(255, 255, 255, 0.12);
   --space-2: 0.5rem;
   --space-3: 0.75rem;
   --space-4: 1rem;
@@ -26,6 +37,56 @@
   --font-size-base: 1rem;
   --font-size-lg: 1.125rem;
   --font-size-xl: clamp(2.5rem, 5vw, 4.75rem);
+}
+
+:root.light-mode,
+body.light-mode {
+  --color-bg: #f5efe4;
+  --color-bg-start: #fcf7f0;
+  --color-bg-accent: rgba(240, 183, 114, 0.26);
+  --color-bg-accent-secondary: rgba(36, 105, 90, 0.12);
+  --color-surface: rgba(255, 251, 245, 0.92);
+  --color-surface-strong: #fffaf2;
+  --color-surface-card: rgba(255, 253, 248, 0.92);
+  --color-border: rgba(104, 80, 50, 0.18);
+  --color-text: #2d2318;
+  --color-text-muted: #68553f;
+  --color-text-placeholder: rgba(104, 85, 63, 0.7);
+  --color-primary: #24695a;
+  --color-primary-soft: rgba(36, 105, 90, 0.14);
+  --color-button-hover-border: rgba(36, 105, 90, 0.35);
+  --color-button-hover-bg: rgba(36, 105, 90, 0.08);
+  --color-track: rgba(104, 85, 63, 0.14);
+  --color-shadow: rgba(61, 43, 20, 0.12);
+  --color-input-shadow: rgba(255, 255, 255, 0.82);
+}
+
+:root.high-contrast,
+body.high-contrast {
+  --color-bg: #000000;
+  --color-bg-start: #000000;
+  --color-bg-accent: rgba(255, 255, 0, 0.18);
+  --color-bg-accent-secondary: rgba(0, 255, 0, 0.16);
+  --color-surface: rgba(17, 17, 17, 0.96);
+  --color-surface-strong: #111111;
+  --color-surface-card: rgba(17, 17, 17, 0.96);
+  --color-border: #ffffff;
+  --color-text: #ffffff;
+  --color-text-muted: #ffff00;
+  --color-text-placeholder: rgba(255, 255, 0, 0.82);
+  --color-primary: #00ff00;
+  --color-primary-soft: rgba(0, 255, 0, 0.28);
+  --color-button-hover-border: #00ff00;
+  --color-button-hover-bg: rgba(0, 255, 0, 0.14);
+  --color-progress-start: #00ff00;
+  --color-progress: #00cc00;
+  --color-progress-warn-start: #ffff00;
+  --color-progress-warn: #ffcc00;
+  --color-progress-danger-start: #ff6666;
+  --color-progress-danger: #ff3333;
+  --color-track: rgba(255, 255, 255, 0.22);
+  --color-shadow: rgba(255, 255, 255, 0.08);
+  --color-input-shadow: rgba(255, 255, 255, 0.06);
 }
 
 * {
@@ -46,8 +107,8 @@ body {
   color: var(--color-text);
   background:
     radial-gradient(circle at top left, var(--color-bg-accent), transparent 28rem),
-    radial-gradient(circle at bottom right, rgba(36, 105, 90, 0.12), transparent 24rem),
-    linear-gradient(180deg, #fcf7f0 0%, var(--color-bg) 100%);
+    radial-gradient(circle at bottom right, var(--color-bg-accent-secondary), transparent 24rem),
+    linear-gradient(180deg, var(--color-bg-start) 0%, var(--color-bg) 100%);
 }
 
 h1,
@@ -65,6 +126,30 @@ output {
 
 output {
   display: inline-block;
+}
+
+.theme-toggle {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1000;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 0.7rem 1.15rem;
+  background: var(--color-surface-strong);
+  color: var(--color-text);
+  box-shadow: 0 16px 32px var(--color-shadow);
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.theme-toggle:hover {
+  transform: translateY(-1px);
+  border-color: var(--color-button-hover-border);
+  background: var(--color-button-hover-bg);
 }
 
 .app-shell {
@@ -144,15 +229,16 @@ output {
   resize: vertical;
   background: var(--color-surface-strong);
   color: var(--color-text);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82);
+  box-shadow: inset 0 1px 0 var(--color-input-shadow);
 }
 
 #input-text::placeholder {
-  color: rgba(104, 85, 63, 0.7);
+  color: var(--color-text-placeholder);
 }
 
 #input-text:focus-visible,
-.clear-button:focus-visible {
+.clear-button:focus-visible,
+.theme-toggle:focus-visible {
   outline: 3px solid var(--color-primary-soft);
   outline-offset: 2px;
 }
@@ -184,8 +270,8 @@ output {
 
 .clear-button:hover {
   transform: translateY(-1px);
-  border-color: rgba(36, 105, 90, 0.35);
-  background: rgba(36, 105, 90, 0.08);
+  border-color: var(--color-button-hover-border);
+  background: var(--color-button-hover-bg);
 }
 
 .limit-note {
@@ -213,25 +299,25 @@ output {
   width: 100%;
   height: 0.85rem;
   border-radius: 999px;
-  background: rgba(104, 85, 63, 0.14);
+  background: var(--color-track);
 }
 
 .progress-bar {
   width: 0;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #4eb270 0%, var(--color-progress) 100%);
+  background: linear-gradient(90deg, var(--color-progress-start) 0%, var(--color-progress) 100%);
   transition:
     width 0.2s ease,
     background 0.2s ease;
 }
 
 .progress-bar.warn {
-  background: linear-gradient(90deg, #efc46a 0%, var(--color-progress-warn) 100%);
+  background: linear-gradient(90deg, var(--color-progress-warn-start) 0%, var(--color-progress-warn) 100%);
 }
 
 .progress-bar.danger {
-  background: linear-gradient(90deg, #e37c68 0%, var(--color-progress-danger) 100%);
+  background: linear-gradient(90deg, var(--color-progress-danger-start) 0%, var(--color-progress-danger) 100%);
 }
 
 .stats-grid {
@@ -245,7 +331,7 @@ output {
   padding: var(--space-5);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: rgba(255, 253, 248, 0.92);
+  background: var(--color-surface-card);
 }
 
 .stat-card {
@@ -309,35 +395,9 @@ output {
   .stats-grid {
     grid-template-columns: 1fr;
   }
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-bg: #171410;
-    --color-bg-accent: rgba(227, 124, 104, 0.12);
-    --color-surface: rgba(38, 31, 25, 0.9);
-    --color-surface-strong: #2b241e;
-    --color-border: rgba(226, 198, 165, 0.16);
-    --color-text: #f5e9da;
-    --color-text-muted: #cfbaa0;
-    --color-primary: #8dcab6;
-    --color-primary-soft: rgba(141, 202, 182, 0.18);
-    --color-shadow: rgba(0, 0, 0, 0.3);
-  }
-
-  body {
-    background:
-      radial-gradient(circle at top left, var(--color-bg-accent), transparent 26rem),
-      radial-gradient(circle at bottom right, rgba(141, 202, 182, 0.1), transparent 24rem),
-      linear-gradient(180deg, #15120f 0%, var(--color-bg) 100%);
-  }
-
-  .stat-card,
-  .top-words-panel {
-    background: rgba(47, 39, 32, 0.92);
-  }
-
-  .progress-track {
-    background: rgba(207, 186, 160, 0.16);
+  .theme-toggle {
+    top: 0.75rem;
+    right: 0.75rem;
   }
 }

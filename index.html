@@ -4,9 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Real-Time Text Analyzer</title>
+    <script>
+      (function () {
+        var theme = localStorage.getItem("theme") || "dark";
+
+        if (theme !== "dark") {
+          document.documentElement.classList.add(theme === "high-contrast" ? "high-contrast" : "light-mode");
+        }
+      }());
+    </script>
     <link rel="stylesheet" href="style.css">
   </head>
   <body>
+    <button
+      id="theme-toggle"
+      class="theme-toggle"
+      type="button"
+      aria-label="Current theme: Dark Mode. Activate to switch theme."
+    >
+      Dark Mode
+    </button>
     <main class="app-shell">
       <header class="page-header">
         <p class="eyebrow">Offline Writing Utility</p>
