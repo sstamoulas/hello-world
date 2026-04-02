@@ -1,114 +1,84 @@
 (function () {
-  function byId(id) {
-    return document.getElementById(id);
-  }
-
-  function setCardValue(card, value) {
-    var valueNode = card.querySelector(".card__value");
-    var nextValue = String(value);
-    var previousValue = valueNode.textContent;
-
-    if (previousValue === nextValue) {
-      return;
+  function flashValue(element) {
+    if (element._flashTimer) {
+      clearTimeout(element._flashTimer);
     }
 
-    valueNode.textContent = nextValue;
-    card.classList.remove("card--updated");
-    if (card._updateTimer) {
-      clearTimeout(card._updateTimer);
-    }
+    element.classList.remove("is-updating");
+    void element.offsetWidth;
+    element.classList.add("is-updating");
 
-    void card.offsetWidth;
-    card.classList.add("card--updated");
-    card._updateTimer = setTimeout(function () {
-      card.classList.remove("card--updated");
-      card._updateTimer = null;
-    }, 600);
+    element._flashTimer = setTimeout(function () {
+      element.classList.remove("is-updating");
+      element._flashTimer = null;
+    }, 300);
   }
 
-  function renderTopWords(listNode, words) {
+  function renderTopWords(list, words) {
     var fragment = document.createDocumentFragment();
     var item;
-    var text;
-    var wordNode;
-    var countNode;
+    var count;
     var index;
 
-    listNode.innerHTML = "";
+    list.innerHTML = "";
 
     if (!words.length) {
       item = document.createElement("li");
       item.className = "top-words__empty";
-      item.textContent = "No repeated words yet.";
+      item.textContent = "No significant words yet.";
       fragment.appendChild(item);
-      listNode.appendChild(fragment);
+      list.appendChild(fragment);
       return;
     }
 
     for (index = 0; index < words.length; index += 1) {
       item = document.createElement("li");
       item.className = "top-words__item";
+      item.appendChild(document.createTextNode(words[index].word + " "));
 
-      wordNode = document.createElement("span");
-      wordNode.className = "top-words__word";
-      wordNode.textContent = words[index].word;
-
-      text = document.createTextNode(" ");
-
-      countNode = document.createElement("span");
-      countNode.className = "top-words__count";
-      countNode.textContent = "(" + words[index].count + ")";
-
-      item.appendChild(wordNode);
-      item.appendChild(text);
-      item.appendChild(countNode);
+      count = document.createElement("span");
+      count.className = "top-words__count";
+      count.textContent = "(" + words[index].count + ")";
+      item.appendChild(count);
       fragment.appendChild(item);
     }
 
-    listNode.appendChild(fragment);
+    list.appendChild(fragment);
   }
 
   document.addEventListener("DOMContentLoaded", function () {
-    var textarea = byId("text-input");
-    var clearButton = byId("clear-button");
-    var topWordsList = byId("top-words");
-    var metricCards = {};
-    var metricNames = [
-      "wordCount",
-      "charCount",
-      "charCountNoSpaces",
-      "sentenceCount",
-      "paragraphCount",
-      "readingTime",
-      "avgWordLength"
-    ];
-    var index;
+    var textarea = document.getElementById("text-input");
+    var topWordsList = document.getElementById("top-words");
+    var statElements = document.querySelectorAll("[data-stat]");
 
-    for (index = 0; index < metricNames.length; index += 1) {
-      metricCards[metricNames[index]] = document.querySelector('[data-metric="' + metricNames[index] + '"]');
+    function update() {
+      var stats = Analyzer.analyze(textarea.value);
+      var index;
+      var element;
+      var key;
+      var nextValue;
+
+      for (index = 0; index < statElements.length; index += 1) {
+        element = statElements[index];
+        key = element.getAttribute("data-stat");
+        nextValue = stats[key];
+
+        if (key === "avgWordLength") {
+          nextValue = nextValue.toFixed(1);
+        }
+
+        nextValue = String(nextValue);
+
+        if (element.textContent !== nextValue) {
+          element.textContent = nextValue;
+          flashValue(element);
+        }
+      }
+
+      renderTopWords(topWordsList, stats.topWords);
     }
 
-    function updateMetrics() {
-      var text = textarea.value;
-
-      setCardValue(metricCards.wordCount, Analyzer.wordCount(text));
-      setCardValue(metricCards.charCount, Analyzer.charCount(text));
-      setCardValue(metricCards.charCountNoSpaces, Analyzer.charCountNoSpaces(text));
-      setCardValue(metricCards.sentenceCount, Analyzer.sentenceCount(text));
-      setCardValue(metricCards.paragraphCount, Analyzer.paragraphCount(text));
-      setCardValue(metricCards.readingTime, Analyzer.readingTime(text));
-      setCardValue(metricCards.avgWordLength, Analyzer.avgWordLength(text).toFixed(1));
-
-      renderTopWords(topWordsList, Analyzer.topWords(text, 5));
-    }
-
-    textarea.addEventListener("input", updateMetrics);
-    clearButton.addEventListener("click", function () {
-      textarea.value = "";
-      updateMetrics();
-      textarea.focus();
-    });
-
-    updateMetrics();
+    textarea.addEventListener("input", update);
+    update();
   });
 }());
