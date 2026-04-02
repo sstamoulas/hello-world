@@ -6,69 +6,95 @@
     <title>Real-Time Text Analyzer</title>
     <link rel="stylesheet" href="style.css">
   </head>
-  <body class="empty">
+  <body>
     <main class="app-shell">
       <header class="page-header">
-        <p class="eyebrow">Offline Utility</p>
+        <p class="eyebrow">Offline Writing Utility</p>
         <h1>Real-Time Text Analyzer</h1>
-        <p class="intro">Paste or type text to inspect live writing metrics instantly in your browser.</p>
+        <p class="intro">
+          Inspect live writing metrics instantly with a self-contained analyzer that runs directly from
+          your filesystem.
+        </p>
       </header>
 
       <section class="layout" aria-label="Real-time text analyzer">
         <section class="panel editor-panel" aria-labelledby="input-label">
           <div class="panel-header">
-            <h2 id="input-label">Text Input</h2>
-            <p>Statistics update on every keystroke with no reloads and no network calls.</p>
+            <h2 id="input-label">Input Text</h2>
+            <p>Paste or type any passage below to update the dashboard in real time.</p>
           </div>
 
-          <label class="visually-hidden" for="input-text">Enter text to analyze</label>
+          <label class="visually-hidden" for="input-text">Text to analyze</label>
           <textarea
             id="input-text"
             rows="16"
             placeholder="Start typing here to see live statistics..."
+            spellcheck="false"
           ></textarea>
         </section>
 
-        <section class="panel stats-panel" aria-labelledby="stats-heading">
+        <section class="panel stats-panel" id="stats" aria-labelledby="stats-heading">
           <div class="panel-header">
             <h2 id="stats-heading">Live Statistics</h2>
-            <p>All seven metrics remain visible together on desktop layouts.</p>
+            <p>Every card maps directly to a computed metric from the analysis engine.</p>
           </div>
 
-          <section class="stats-grid" aria-label="Text statistics">
-            <div class="stat-card">
+          <div class="stats-grid">
+            <div class="stat-card" data-stat="charCount">
+              <span class="stat-value">—</span>
               <span class="stat-label">Characters</span>
-              <span class="stat-value" data-stat="charCount">0</span>
             </div>
-            <div class="stat-card">
+
+            <div class="stat-card" data-stat="charCountNoSpaces">
+              <span class="stat-value">—</span>
               <span class="stat-label">Characters No Spaces</span>
-              <span class="stat-value" data-stat="charCountNoSpaces">0</span>
             </div>
-            <div class="stat-card">
+
+            <div class="stat-card" data-stat="wordCount">
+              <span class="stat-value">—</span>
               <span class="stat-label">Words</span>
-              <span class="stat-value" data-stat="wordCount">0</span>
             </div>
-            <div class="stat-card">
-              <span class="stat-label">Sentences</span>
-              <span class="stat-value" data-stat="sentenceCount">0</span>
-            </div>
-            <div class="stat-card">
-              <span class="stat-label">Paragraphs</span>
-              <span class="stat-value" data-stat="paragraphCount">0</span>
-            </div>
-            <div class="stat-card">
-              <span class="stat-label">Reading Time</span>
-              <span class="stat-value" data-stat="readingTimeSeconds">&lt; 1 min</span>
-            </div>
-            <div class="stat-card">
+
+            <div class="stat-card" data-stat="uniqueWordCount">
+              <span class="stat-value">—</span>
               <span class="stat-label">Unique Words</span>
-              <span class="stat-value" data-stat="uniqueWordCount">0</span>
             </div>
-            <div class="stat-card">
-              <span class="stat-label">Average Word Length</span>
-              <span class="stat-value" data-stat="avgWordLength">0</span>
+
+            <div class="stat-card" data-stat="sentenceCount">
+              <span class="stat-value">—</span>
+              <span class="stat-label">Sentences</span>
             </div>
-          </section>
+
+            <div class="stat-card" data-stat="paragraphCount">
+              <span class="stat-value">—</span>
+              <span class="stat-label">Paragraphs</span>
+            </div>
+
+            <div class="stat-card" data-stat="avgWordsPerSentence">
+              <span class="stat-value">—</span>
+              <span class="stat-label">Avg Words / Sentence</span>
+            </div>
+
+            <div class="stat-card" data-stat="readingTimeSec">
+              <span class="stat-value">—</span>
+              <span class="stat-label">Reading Time</span>
+            </div>
+
+            <div class="stat-card" data-stat="speakingTimeSec">
+              <span class="stat-value">—</span>
+              <span class="stat-label">Speaking Time</span>
+            </div>
+
+            <div class="stat-card" data-stat="longestWord">
+              <span class="stat-value">—</span>
+              <span class="stat-label">Longest Word</span>
+            </div>
+
+            <div class="stat-card" data-stat="topWords">
+              <span class="stat-value">—</span>
+              <span class="stat-label">Top Words</span>
+            </div>
+          </div>
         </section>
       </section>
     </main>
