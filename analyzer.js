@@ -1,18 +1,45 @@
-(function (root) {
+(function () {
   "use strict";
 
   var STOP_WORDS = {
     a: true,
     an: true,
     the: true,
-    is: true,
-    in: true,
-    of: true,
-    to: true,
     and: true,
     or: true,
     but: true,
+    in: true,
+    on: true,
+    at: true,
+    to: true,
+    for: true,
+    of: true,
+    with: true,
+    is: true,
+    are: true,
+    was: true,
+    were: true,
+    be: true,
+    been: true,
+    being: true,
+    have: true,
+    has: true,
+    had: true,
+    do: true,
+    does: true,
+    did: true,
+    will: true,
+    would: true,
+    could: true,
+    should: true,
+    i: true,
+    you: true,
+    he: true,
+    she: true,
     it: true,
+    we: true,
+    they: true,
+    this: true,
     that: true
   };
 
@@ -24,102 +51,67 @@
     return String(text);
   }
 
-  function getTrimmedText(text) {
-    return normalizeText(text).replace(/^\s+|\s+$/g, "");
-  }
+  function getWords(text) {
+    var trimmed = text.trim();
 
-  function getRawWords(text) {
-    var trimmedText = getTrimmedText(text);
-
-    if (!trimmedText) {
+    if (!trimmed) {
       return [];
     }
 
-    return trimmedText.split(/\s+/);
-  }
-
-  function normalizeWord(word) {
-    return String(word || "")
-      .toLowerCase()
-      .replace(/^[^a-z0-9']+|[^a-z0-9']+$/gi, "");
-  }
-
-  function getNormalizedWords(words) {
-    var normalizedWords = [];
-    var index;
-    var normalizedWord;
-
-    for (index = 0; index < words.length; index += 1) {
-      normalizedWord = normalizeWord(words[index]);
-
-      if (normalizedWord) {
-        normalizedWords.push(normalizedWord);
-      }
-    }
-
-    return normalizedWords;
+    return trimmed.split(/\s+/).filter(Boolean);
   }
 
   function getSentenceCount(text) {
-    var trimmedText = getTrimmedText(text);
     var matches;
 
-    if (!trimmedText) {
+    if (!text.trim()) {
       return 0;
     }
 
-    matches = trimmedText.match(/[.!?]+(?=\s|$)/g);
+    matches = text.match(/[^.!?]*[.!?]+/g);
 
     return matches ? matches.length : 0;
   }
 
   function getParagraphCount(text) {
-    var trimmedText = getTrimmedText(text);
-    var parts;
-    var count = 0;
-    var index;
-
-    if (!trimmedText) {
+    if (!text.trim()) {
       return 0;
     }
 
-    parts = trimmedText.split(/\n\s*\n+/);
-
-    for (index = 0; index < parts.length; index += 1) {
-      if (getTrimmedText(parts[index])) {
-        count += 1;
-      }
-    }
-
-    return count;
+    return text.split(/\n\s*\n/).filter(function (paragraph) {
+      return paragraph.trim().length > 0;
+    }).length;
   }
 
-  function getUniqueWordCount(words) {
-    var seen = {};
-    var count = 0;
+  function getAverageWordLength(words) {
+    var total = 0;
     var index;
 
-    for (index = 0; index < words.length; index += 1) {
-      if (!seen[words[index]]) {
-        seen[words[index]] = true;
-        count += 1;
-      }
+    if (!words.length) {
+      return "0.0";
     }
 
-    return count;
+    for (index = 0; index < words.length; index += 1) {
+      total += words[index].length;
+    }
+
+    return (total / words.length).toFixed(1);
   }
 
-  function getLongestWord(words) {
-    var longestWord = "";
-    var index;
+  function getReadingTime(wordCount) {
+    var minutes;
 
-    for (index = 0; index < words.length; index += 1) {
-      if (words[index].length > longestWord.length) {
-        longestWord = words[index];
-      }
+    if (wordCount < 200) {
+      return "< 1 min";
     }
 
-    return longestWord;
+    minutes = Math.ceil(wordCount / 200);
+
+    return String(minutes) + " min read";
+  }
+
+  function normalizeTopWord(word) {
+    return word.toLowerCase().replace(/[^a-z0-9']/g, "");
   }
 
   function getTopWords(words) {
@@ -129,9 +121,9 @@
     var word;
 
     for (index = 0; index < words.length; index += 1) {
-      word = words[index];
+      word = normalizeTopWord(words[index]);
 
-      if (STOP_WORDS[word]) {
+      if (!word || STOP_WORDS[word]) {
         continue;
       }
 
@@ -162,33 +154,23 @@
     return entries.slice(0, 5);
   }
 
-  function roundToOneDecimal(value) {
-    return Math.round(value * 10) / 10;
-  }
-
   function analyze(text) {
     var value = normalizeText(text);
-    var rawWords = getRawWords(value);
-    var words = getNormalizedWords(rawWords);
-    var wordCount = rawWords.length;
-    var sentenceCount = getSentenceCount(value);
+    var words = getWords(value);
 
     return {
       charCount: value.length,
-      charCountNoSpaces: value.replace(/\s/g, "").length,
-      wordCount: wordCount,
-      uniqueWordCount: getUniqueWordCount(words),
-      sentenceCount: sentenceCount,
+      charNoSpaces: value.replace(/\s/g, "").length,
+      wordCount: words.length,
+      sentenceCount: getSentenceCount(value),
       paragraphCount: getParagraphCount(value),
-      avgWordsPerSentence: sentenceCount ? roundToOneDecimal(wordCount / sentenceCount) : 0,
-      readingTimeSec: Math.ceil((wordCount / 200) * 60),
-      speakingTimeSec: Math.ceil((wordCount / 130) * 60),
-      longestWord: getLongestWord(words),
+      avgWordLength: getAverageWordLength(words),
+      readingTime: getReadingTime(words.length),
       topWords: getTopWords(words)
     };
   }
 
-  root.TextAnalyzer = {
+  window.Analyzer = {
     analyze: analyze
   };
-}(typeof window !== "undefined" ? window : this));
+}());
