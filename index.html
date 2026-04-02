@@ -49,6 +49,24 @@
             spellcheck="false"
           ></textarea>
 
+          <div class="settings-row" aria-label="Writing goals">
+            <div class="setting-group">
+              <p class="setting-label">Character soft limit</p>
+              <p class="limit-note">Soft limit: 5,000 characters</p>
+            </div>
+            <div class="setting-group" id="word-goal-group">
+              <label class="setting-label" for="word-goal-input">Word count goal</label>
+              <input
+                type="number"
+                id="word-goal-input"
+                min="1"
+                inputmode="numeric"
+                placeholder="e.g. 500"
+                aria-label="Word count goal"
+              >
+            </div>
+          </div>
+
           <div class="editor-tools">
             <div class="clear-action">
               <button class="clear-button" id="clear-button" type="button">Clear</button>
@@ -56,7 +74,6 @@
                 <kbd>⌘/Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Del</kbd>
               </span>
             </div>
-            <p class="limit-note">Soft limit: 5,000 characters</p>
           </div>
 
           <section class="progress-section" aria-labelledby="progress-heading">
@@ -120,6 +137,13 @@
             </div>
             <output class="top-words-output" data-stat="topWords">No top words yet.</output>
           </section>
+
+          <p
+            id="word-goal-indicator"
+            class="goal-progress"
+            aria-live="polite"
+            hidden
+          ></p>
 
           <div class="results-actions">
             <button
