@@ -1,130 +1,123 @@
-(function () {
-  var STOP_WORDS = [
+var TextAnalyzer = (function () {
+  var STOP_WORDS = new Set([
     "the",
     "a",
     "an",
+    "is",
+    "it",
+    "in",
+    "of",
+    "to",
     "and",
     "or",
     "but",
-    "in",
+    "for",
+    "with",
+    "that",
+    "this",
     "on",
     "at",
-    "to",
-    "for",
-    "of",
-    "with",
-    "is",
-    "it",
-    "as"
-  ];
+    "by",
+    "from",
+    "be",
+    "are",
+    "was",
+    "were",
+    "as",
+    "if",
+    "then",
+    "than",
+    "so",
+    "not",
+    "into",
+    "about",
+    "over",
+    "under",
+    "again",
+    "etc"
+  ]);
 
-  function trim(text) {
-    return String(text || "").replace(/^\s+|\s+$/g, "");
+  function normalizeText(text) {
+    return String(text || "");
+  }
+
+  function trimText(text) {
+    return normalizeText(text).replace(/^\s+|\s+$/g, "");
   }
 
   function tokenizeWords(text) {
-    var value = trim(text);
+    var matches = normalizeText(text).toLowerCase().match(/[a-z0-9']+/g);
 
-    if (!value) {
-      return [];
-    }
-
-    return value.split(/\s+/);
-  }
-
-  function normalizedWords(text) {
-    var matches = String(text || "").toLowerCase().match(/[a-z0-9']+/g);
     return matches || [];
   }
 
-  function isStopWord(word) {
-    var index;
+  function countCharacters(text) {
+    var value = normalizeText(text);
 
-    for (index = 0; index < STOP_WORDS.length; index += 1) {
-      if (STOP_WORDS[index] === word) {
-        return true;
-      }
-    }
-
-    return false;
+    return {
+      total: value.length,
+      noSpaces: value.replace(/\s/g, "").length
+    };
   }
 
-  function roundToOneDecimal(value) {
-    return Math.round(value * 10) / 10;
-  }
-
-  function charCount(text) {
-    return String(text || "").length;
-  }
-
-  function charCountNoSpaces(text) {
-    return String(text || "").replace(/\s/g, "").length;
-  }
-
-  function wordCount(text) {
-    return tokenizeWords(text).length;
-  }
-
-  function sentenceCount(text) {
-    var value = trim(text);
-    var sentences;
-    var index;
-    var total = 0;
+  function countWords(text) {
+    var value = trimText(text);
 
     if (!value) {
       return 0;
     }
 
-    sentences = value.split(/[.!?]+/);
-
-    for (index = 0; index < sentences.length; index += 1) {
-      if (trim(sentences[index])) {
-        total += 1;
-      }
-    }
-
-    return total;
+    return value.split(/\s+/).length;
   }
 
-  function paragraphCount(text) {
-    var value = trim(text);
-    var paragraphs;
+  function countSentences(text) {
+    var segments = trimText(text).split(/[.!?]+/);
+    var count = 0;
     var index;
-    var total = 0;
 
-    if (!value) {
+    if (!trimText(text)) {
       return 0;
     }
 
-    paragraphs = value.split(/\n\s*\n+/);
-
-    for (index = 0; index < paragraphs.length; index += 1) {
-      if (trim(paragraphs[index])) {
-        total += 1;
+    for (index = 0; index < segments.length; index += 1) {
+      if (trimText(segments[index])) {
+        count += 1;
       }
     }
 
-    return total;
+    return count;
   }
 
-  function readingTime(text) {
-    var words = wordCount(text);
-    var minutes = Math.ceil(words / 200);
+  function countParagraphs(text) {
+    var segments = trimText(text).split(/\n\s*\n+/);
+    var count = 0;
+    var index;
 
-    if (words === 0) {
-      return "< 1 min";
+    if (!trimText(text)) {
+      return 0;
     }
 
-    if (minutes < 1) {
-      return "< 1 min";
+    for (index = 0; index < segments.length; index += 1) {
+      if (trimText(segments[index])) {
+        count += 1;
+      }
     }
 
-    return String(minutes) + " min";
+    return count;
   }
 
-  function avgWordLength(text) {
-    var words = normalizedWords(text);
-    var total = 0;
+  function estimateReadingTime(wordCount) {
+    var totalSeconds = Math.round((Number(wordCount) || 0) * 60 / 200);
+
+    return {
+      minutes: Math.floor(totalSeconds / 60),
+      seconds: totalSeconds % 60
+    };
+  }
+
+  function averageWordLength(text) {
+    var words = tokenizeWords(text);
+    var totalLength = 0;
     var index;
 
     if (!words.length) {
@@ -132,15 +125,19 @@
     }
 
     for (index = 0; index < words.length; index += 1) {
-      total += words[index].length;
+      totalLength += words[index].length;
     }
 
-    return roundToOneDecimal(total / words.length);
+    return Math.round((totalLength / words.length) * 10) / 10;
   }
 
-  function topWords(text, n) {
-    var limit = typeof n === "number" ? n : 5;
-    var words = normalizedWords(text);
+  function countUniqueWords(text) {
+    return new Set(tokenizeWords(text)).size;
+  }
+
+  function topKeywords(text, n) {
+    var limit = typeof n === "number" ? n : 10;
+    var words = tokenizeWords(text);
     var counts = {};
     var results = [];
     var keys;
@@ -150,7 +147,7 @@
     for (index = 0; index < words.length; index += 1) {
       word = words[index];
 
-      if (isStopWord(word)) {
+      if (STOP_WORDS.has(word)) {
         continue;
       }
 
@@ -189,28 +186,14 @@
     return results.slice(0, limit);
   }
 
-  function analyze(text) {
-    return {
-      charCount: charCount(text),
-      charCountNoSpaces: charCountNoSpaces(text),
-      wordCount: wordCount(text),
-      sentenceCount: sentenceCount(text),
-      paragraphCount: paragraphCount(text),
-      readingTime: readingTime(text),
-      avgWordLength: avgWordLength(text),
-      topWords: topWords(text, 5)
-    };
-  }
-
-  window.Analyzer = {
-    charCount: charCount,
-    charCountNoSpaces: charCountNoSpaces,
-    wordCount: wordCount,
-    sentenceCount: sentenceCount,
-    paragraphCount: paragraphCount,
-    readingTime: readingTime,
-    avgWordLength: avgWordLength,
-    topWords: topWords,
-    analyze: analyze
+  return {
+    countCharacters: countCharacters,
+    countWords: countWords,
+    countSentences: countSentences,
+    countParagraphs: countParagraphs,
+    estimateReadingTime: estimateReadingTime,
+    averageWordLength: averageWordLength,
+    countUniqueWords: countUniqueWords,
+    topKeywords: topKeywords
   };
 }());

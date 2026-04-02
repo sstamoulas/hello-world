@@ -8,163 +8,169 @@ ticket: COM-13
 ---
 
 ## Objective
-Build a self-contained, single-page Real-Time Text Analyzer web utility using vanilla
-HTML, CSS, and JavaScript. The application accepts user-typed text and immediately
-(on every keystroke) computes and displays a rich set of statistics — character count,
-word count, sentence count, paragraph count, estimated reading time, average word
-length, and the top 5 most-frequent words. No build toolchain, no framework, no
-external dependencies.
+Build a fully self-contained, single-page Real-Time Text Analyzer web application that
+provides live statistics as the user types into a textarea. The app must work when opened
+directly from the filesystem (`file://` protocol) with no build step and no server
+required. All statistics update on every keystroke with zero latency.
 
 ## Stack & Conventions
-- **Language / Runtime:** Vanilla HTML5, CSS3, plain ES5-compatible JavaScript
-- **Delivery model:** Static files only — no server, no bundler, no `package.json`.
-  All files are loaded directly from the filesystem or any plain HTTP server.
-- **JS architecture:** Two classic (non-module) `<script>` tags in dependency order:
-  `analyzer.js` first (pure analysis functions, no DOM), then `app.js` (DOM wiring).
-  Both files share the global `window` scope — no `import`/`export` statements so the
-  app works correctly over the `file://` protocol.
-- **CSS:** Single external stylesheet (`style.css`). Use CSS custom properties for the
-  colour palette. Mobile-first, responsive via a two-column grid that collapses to
-  single-column on narrow viewports.
-- **Spec doc:** `docs/specs/COM-13.md` is written as part of this ticket per the
-  pipeline convention (`SPEC_DOC_PATH = docs/specs`).
+- **Pure HTML5 / CSS3 / Vanilla JavaScript** — no frameworks, no build tooling, no
+  package manager.
+- **Four-file structure** dictated by the ticket: `index.html`, `style.css`,
+  `analyzer.js`, `app.js`.
+- Both JS files are loaded as **classic `<script>` tags** (not ES modules) to guarantee
+  `file://` compatibility.
+- `analyzer.js` is loaded *before* `app.js` so its exported functions are available as
+  globals on `window`.
+- CSS uses custom properties (`--var`) for theming and `CSS Grid` / `Flexbox` for
+  responsive layout.
+- No external fonts, icon libraries, or CDN dependencies — the app must be fully
+  self-contained.
 
 ## Files to Create or Modify
 
-- `index.html` — Create. Main shell: `<textarea>` input, a stats grid container, a
-  top-words list container. Loads `style.css` in `<head>`, loads `analyzer.js` then
-  `app.js` before `</body>`. All `<script>` tags must be classic (no `type="module"`).
+- `index.html` — Create. The application shell. Contains the `<textarea>` input, a
+  stats dashboard grid, and a keyword-frequency table. Loads `style.css`, then
+  `analyzer.js`, then `app.js` as classic scripts. Includes a `<meta
+  name="viewport">` tag for responsive behaviour.
 
-- `style.css` — Create. Full responsive stylesheet:
-  - CSS custom properties for colours, spacing, font-size.
-  - A sticky header with the app title.
-  - Two-column grid layout: textarea on the left, stats panel on the right.
-    Below 640 px the grid collapses to a single column (textarea on top, stats below).
-  - Stat cards: each stat displayed in a labelled card (label + large numeric value).
-  - Top-words section: a ranked ordered list beneath the stat cards.
-  - Smooth CSS transitions on stat value changes (opacity flash or colour fade).
-  - Accessible focus styles on the textarea.
+- `style.css` — Create. Full responsive stylesheet. Defines CSS custom properties for
+  colours and spacing. Implements a two-column desktop layout (textarea left, stats
+  panel right) that collapses to a single column on narrow viewports (`max-width:
+  768px`). Styles the stats cards, the keyword frequency table, a visible character
+  limit progress bar, and a "cleared" flash animation.
 
-- `analyzer.js` — Create. Pure analysis module; exposes functions on `window.Analyzer`:
-  - `Analyzer.charCount(text)` → integer (total characters including whitespace)
-  - `Analyzer.charCountNoSpaces(text)` → integer (characters excluding all whitespace)
-  - `Analyzer.wordCount(text)` → integer (split on whitespace, filter empty tokens)
-  - `Analyzer.sentenceCount(text)` → integer (split on `.` `!` `?` sequences, filter empty)
-  - `Analyzer.paragraphCount(text)` → integer (split on one or more blank lines, filter empty)
-  - `Analyzer.readingTime(text)` → string e.g. `"< 1 min"` or `"3 min"` (assume 200 wpm)
-  - `Analyzer.avgWordLength(text)` → number rounded to 1 decimal place
-  - `Analyzer.topWords(text, n)` → array of `{ word, count }` objects, top-n by frequency,
-    case-insensitive, strip punctuation, exclude a small stop-word list
-    (`["the","a","an","and","or","but","in","on","at","to","for","of","with","is","it","as"]`).
-  - `Analyzer.analyze(text)` → convenience wrapper that returns a plain object with all
-    the above stats in one call: `{ charCount, charCountNoSpaces, wordCount,
-    sentenceCount, paragraphCount, readingTime, avgWordLength, topWords }`.
+- `analyzer.js` — Create. Pure analysis module — **no DOM access**. Exposes all
+  functions as properties on a global `TextAnalyzer` object (namespace pattern). Must
+  implement and export the following functions:
+  - `countCharacters(text)` → `{ total, noSpaces }`
+  - `countWords(text)` → integer (split on whitespace, ignore empty tokens)
+  - `countSentences(text)` → integer (split on `.`, `!`, `?`, filter empty)
+  - `countParagraphs(text)` → integer (split on `\n\n+`, filter empty)
+  - `estimateReadingTime(wordCount)` → `{ minutes, seconds }` (assumes 200 wpm)
+  - `averageWordLength(text)` → float rounded to 1 decimal place
+  - `countUniqueWords(text)` → integer (case-insensitive)
+  - `topKeywords(text, n = 10)` → array of `{ word, count }` objects sorted
+    descending, excluding a built-in stop-word list (the, a, an, is, it, in, of,
+    to, and, or, but, for, with, that, this, etc.)
 
-- `app.js` — Create. DOM wiring and rendering:
-  - On `DOMContentLoaded`, grab the `<textarea>` and all stat display elements by
-    `data-stat` attribute.
-  - Attach an `input` event listener to the `<textarea>`.
-  - On every `input` event call `Analyzer.analyze(textarea.value)` and update every
-    stat element's `textContent`.
-  - Render the top-words list into a `<ol id="top-words">` element by clearing and
-    re-populating `<li>` children on each update.
-  - Trigger an initial render call on load so the stats show `0` / `"< 1 min"` etc.
-    rather than blank.
-  - No external libraries. No `import`/`export`.
+- `app.js` — Create. DOM controller. Wires the `<textarea>` `input` event to
+  `TextAnalyzer.*` calls and updates the dashboard. Must also implement:
+  - Debounce logic for the keyword table (100 ms) to avoid thrashing on rapid input.
+  - A character-limit warning (configurable constant `MAX_CHARS = 5000`) that turns
+    the progress bar red and disables additional input at the limit.
+  - A "Clear" button handler that resets the textarea and all stats to their zero
+    state with a brief CSS flash animation.
+  - A "Copy Stats" button that writes a plain-text summary of all current stats to
+    the clipboard via `navigator.clipboard.writeText`.
+  - On `DOMContentLoaded`, initialise all stat displays to `0` / `0 sec` so the
+    dashboard is never empty.
 
-- `docs/specs/COM-13.md` — Create. Spec document following the pipeline convention.
-  Must include: ticket key, objective summary, file inventory, and the acceptance
-  criteria verbatim from this plan.
+- `docs/specs/COM-13.md` — Create. The spec document for this ticket (written as part
+  of pipeline finalisation). Should document the feature, file responsibilities, and
+  the public API of `TextAnalyzer`.
 
 ## Implementation Notes
 
-### `file://` Protocol Compatibility
-The app has **no build step and no local server requirement**. It must open correctly
-by double-clicking `index.html` in a file manager (Chrome/Firefox over `file://`).
-Therefore:
-- **Do NOT use `<script type="module">`** — Chrome blocks cross-file ES module fetches
-  from `file://` origins with a CORS error.
-- Load JS files as **classic scripts** in dependency order:
-  ```html
-  <script src="analyzer.js"></script>
-  <script src="app.js"></script>
-  ```
-- `analyzer.js` must attach its public API to `window.Analyzer = { ... }` so `app.js`
-  can reference `Analyzer` without any import statement.
-- Wrap `app.js` in a self-invoking function `(function(){ ... }())` to avoid polluting
-  the global scope.
-
-### Stat Card HTML Pattern
-Use `data-stat` attributes to let `app.js` select each display element without
-hard-coding IDs for every stat:
+### File loading order
 ```html
-<div class="stat-card">
-  <span class="stat-label">Words</span>
-  <span class="stat-value" data-stat="wordCount">0</span>
-</div>
+<link rel="stylesheet" href="style.css">
+<!-- analyzer first — defines window.TextAnalyzer -->
+<script src="analyzer.js"></script>
+<!-- app second — consumes window.TextAnalyzer -->
+<script src="app.js"></script>
 ```
-`app.js` can then do:
+Both scripts must be placed at the bottom of `<body>` (before `</body>`) OR use the
+`defer` attribute on both tags. Using `defer` is preferred as it keeps the `<head>`
+clean and preserves execution order.
+
+### Namespace pattern for analyzer.js
 ```js
-document.querySelectorAll('[data-stat]').forEach(function(el) {
-  el.textContent = stats[el.dataset.stat];
-});
-```
+// analyzer.js
+var TextAnalyzer = (function () {
+  var STOP_WORDS = new Set([/* ... */]);
 
-### Reading-Time Logic
+  function countWords(text) { /* ... */ }
+  // ... other functions
+
+  return {
+    countCharacters,
+    countWords,
+    countSentences,
+    countParagraphs,
+    estimateReadingTime,
+    averageWordLength,
+    countUniqueWords,
+    topKeywords,
+  };
+}());
+```
+This keeps everything off the global scope except the single `TextAnalyzer` object.
+
+### IIFE wrapper for app.js
 ```js
-var words = Analyzer.wordCount(text);
-var mins = Math.ceil(words / 200);
-return words === 0 ? '< 1 min' : (mins < 1 ? '< 1 min' : mins + ' min');
+// app.js
+(function () {
+  'use strict';
+  // all DOM wiring here
+}());
 ```
 
-### Top-Words Stop List
-Keep the stop-word list small and inline inside `analyzer.js` as a plain array literal.
-Do not fetch it from an external file.
+### Stat card HTML pattern
+Each metric should be a `<div class="stat-card">` with a `<span class="stat-value"
+id="stat-words">0</span>` and a `<span class="stat-label">Words</span>`. This makes
+targeted DOM updates cheap (`getElementById` + `textContent`).
 
-### No External Fonts / Icons
-Do not reference Google Fonts, Font Awesome, or any CDN resource. Use
-`font-family: system-ui, sans-serif` so the app is fully offline-capable.
+### Keyword table
+Render the top-10 keyword table as a `<table>` inside a `<div
+id="keyword-section">`. On each debounced update, clear `tbody` innerHTML and
+re-render rows. Show an empty-state message ("Start typing to see keywords…") when
+the word count is zero.
+
+### Browser & Runtime Compatibility (`file://` protocol)
+- **Do NOT use ES modules** (`import`/`export` or `<script type="module">`). Chrome
+  and Firefox block cross-origin module fetches from `file://` paths.
+- Both `analyzer.js` and `app.js` are **classic scripts** — no `type="module"`.
+- No `fetch()` calls, no `XMLHttpRequest` — all data is in-memory.
+- `navigator.clipboard` is available in modern browsers; wrap the "Copy Stats" call
+  in a `try/catch` and fall back to a visible "Copied!" / "Copy failed" status
+  message in the UI.
+- No external font or icon CDN links — use system font stack:
+  `font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`.
 
 ## Constraints
-- Do NOT introduce a `package.json`, bundler, or any npm dependency.
-- Do NOT use `<script type="module">` or ES module `import`/`export` syntax.
-- Do NOT modify `README.md` — it documents the orchestrator pipeline, not the target app.
-- Do NOT modify any files in `bin/`, `config/`, `scripts/`, `prompts/`, or `run/`.
-- Preserve the existing `.gitignore` and `.env.example` exactly as-is.
-- All JavaScript must be ES5-compatible (no arrow functions, no `const`/`let`, no
-  template literals, no destructuring) to maximise browser compatibility without a
-  transpiler. *Exception:* `const`/`let` are acceptable if the target environment is
-  known to be a modern evergreen browser; ES5 is the safe floor.
+- Do NOT introduce any npm packages, build tools, or bundlers.
+- Do NOT use ES module syntax (`import`/`export`/`type="module"`).
+- Do NOT fetch any remote resources (fonts, scripts, stylesheets) — the app must work
+  fully offline.
+- Do NOT modify any files outside the four application files and the spec doc.
+- Preserve the exact four-file structure specified in the ticket:
+  `index.html`, `style.css`, `analyzer.js`, `app.js`.
 
 ## Acceptance Criteria
-1. Opening `index.html` directly from the filesystem in Chrome and Firefox (via
-   `file://`) loads the page without any console errors.
-2. Typing into the textarea updates all stat values **without any user action** other
-   than typing (no button press required).
-3. The following stats are displayed and update in real-time:
-   - Total character count (with spaces)
-   - Character count (no spaces)
-   - Word count
-   - Sentence count
-   - Paragraph count
-   - Estimated reading time (e.g. `"< 1 min"`, `"2 min"`)
-   - Average word length (1 decimal place)
-4. A ranked list of the **top 5 most-frequent non-stop words** is displayed and updates
-   in real-time, showing both the word and its count.
-5. When the textarea is empty (on initial load and after clearing), all numeric stats
-   display `0` and reading time displays `"< 1 min"`.
-6. The layout is **responsive**: on viewports ≥ 640 px the textarea and stats panel
-   are side-by-side; below 640 px they stack vertically (textarea above, stats below).
-7. `analyzer.js` exposes `window.Analyzer` with all eight public functions
-   (`charCount`, `charCountNoSpaces`, `wordCount`, `sentenceCount`, `paragraphCount`,
-   `readingTime`, `avgWordLength`, `topWords`) plus the convenience `analyze` wrapper.
-8. `app.js` contains no `import`/`export` statements and no `<script type="module">`
-   is present anywhere in `index.html`.
-9. No network requests are made at any point — the app is fully self-contained and
-   offline-capable (verified via DevTools Network tab showing zero requests after
-   initial file load).
-10. `docs/specs/COM-13.md` exists and documents the ticket objective, file inventory,
-    and these acceptance criteria.
+1. Opening `index.html` directly in Chrome or Firefox via `file://` loads the app with
+   zero console errors.
+2. Typing or pasting text into the textarea updates **all** of the following stats
+   instantly (on each keystroke): Character Count (total), Character Count (no
+   spaces), Word Count, Sentence Count, Paragraph Count, Estimated Reading Time,
+   Average Word Length, Unique Word Count.
+3. The top-10 keyword frequency table updates within 100 ms of the user stopping
+   typing and correctly excludes stop words.
+4. At 5,000 characters the progress bar turns red, further input is blocked, and a
+   warning message is displayed.
+5. Clicking "Clear" resets the textarea and all stat displays to their zero/initial
+   state and triggers the flash animation on the textarea.
+6. Clicking "Copy Stats" writes a plain-text summary of all current stats to the
+   clipboard; the button label changes briefly to "Copied!" or "Copy failed" as
+   appropriate.
+7. The layout is responsive: on viewports ≥ 768 px wide the textarea and stats panel
+   are side-by-side; below 768 px they stack vertically with no horizontal overflow.
+8. `analyzer.js` contains zero DOM references; all functions are pure (same input →
+   same output) and accessible via the global `window.TextAnalyzer` namespace.
+9. `app.js` contains zero text-analysis logic; it only reads from `TextAnalyzer.*`
+   and writes to the DOM.
+10. The spec document `docs/specs/COM-13.md` exists and documents the `TextAnalyzer`
+    public API.
 ```
 
 ---
@@ -172,27 +178,27 @@ Do not reference Google Fonts, Font Awesome, or any CDN resource. Use
 ## Review & Approval
 
 
-All ten acceptance criteria are satisfied and all constraints are respected.
+All ten acceptance criteria are satisfied and every constraint from the plan is respected.
 
-**AC1 (file:// compatibility):** No `<script type="module">` is present. `analyzer.js` is wrapped in an IIFE and exposes `window.Analyzer = { … }`. `app.js` is also wrapped in an IIFE. The script loading order (`analyzer.js` before `app.js`) is preserved from the existing `index.html`, which the diff confirms was not changed in that section.
+**AC1 (file:// compatibility):** Both scripts are loaded as classic `<script defer>` tags (no `type="module"`) in `<head>`, preserving execution order. `analyzer.js` exposes `window.TextAnalyzer` via an IIFE namespace pattern; `app.js` is wrapped in its own IIFE with `'use strict'`. No ES module syntax anywhere.
 
-**AC2 (real-time updates):** `app.js` attaches an `input` listener to the textarea and calls `Analyzer.analyze(textarea.value)` synchronously on every keystroke. No debouncing or async path.
+**AC2 (live stats on every keystroke):** `textInput.addEventListener("input", ...)` calls `refresh()` → `collectStats()` → all eight `TextAnalyzer.*` functions synchronously. All eight required stats (characters total, characters no-spaces, words, sentences, paragraphs, reading time, average word length, unique words) are mapped to DOM elements by ID and updated on every input event.
 
-**AC3 (all seven stats):** All seven `data-stat` attributes (`charCount`, `charCountNoSpaces`, `wordCount`, `sentenceCount`, `paragraphCount`, `readingTime`, `avgWordLength`) are present in the new `index.html` markup. `app.js` iterates `querySelectorAll("[data-stat]")` and updates each one from `stats[key]`, with a correct `toFixed(1)` call for `avgWordLength`.
+**AC3 (keyword table ≤ 100 ms debounce):** `renderKeywordsDebounced` is built with `debounce(fn, 100)`. `TextAnalyzer.topKeywords` uses `STOP_WORDS` as a `Set` for O(1) exclusion. Default `n = 10` matches the plan.
 
-**AC4 (top-5 words):** `topWords(text, 5)` is called inside `Analyzer.analyze()`. `renderTopWords` clears and repopulates the `<ol id="top-words">` with `word + count` on every update.
+**AC4 (5 000-char limit):** `MAX_CHARS = 5000`. `enforceMaxLength()` slices the value; the `maxlength="5000"` attribute blocks browser-level paste overflow. `progress-bar.is-limit` turns the bar red; `setWarningState(true)` renders the warning message.
 
-**AC5 (empty state):** `update()` is called immediately on `DOMContentLoaded`. All `Analyzer.*` functions return `0` / `"< 1 min"` for empty input; no `NaN` or `undefined` paths exist.
+**AC5 (Clear button):** Resets `textInput.value`, calls `refresh("")` and `renderKeywords("")` for immediate zero-state, fires the `is-cleared` CSS animation, and restores focus.
 
-**AC6 (responsive layout):** The CSS uses `@media (min-width: 640px)` to apply the two-column `.layout` grid and defaults to single-column below that threshold. This matches the plan's 640 px breakpoint exactly.
+**AC6 (Copy Stats):** `navigator.clipboard.writeText()` wrapped in `try/catch` with `.then`/rejection handlers. Button label changes to `"Copied!"` or `"Copy failed"` for `COPY_STATUS_MS` duration.
 
-**AC7 (window.Analyzer API):** All eight named functions plus the `analyze` convenience wrapper are exposed on `window.Analyzer` in `analyzer.js`. The stop-word list matches the plan's exact 16-word array.
+**AC7 (responsive ≥ 768 px):** `@media (min-width: 768px)` applies the two-column grid; below 768 px the layout stacks vertically with `display: block` overrides for `.panel__header` and `.editor-footer`. No horizontal overflow rules violated.
 
-**AC8 (no ES modules):** `app.js` contains no `import`/`export` and is wrapped in a classic IIFE. No `type="module"` attribute appears anywhere in the HTML diff.
+**AC8 (pure analyzer.js):** `analyzer.js` has zero DOM references; all eight exported functions are deterministic pure functions accessible as `window.TextAnalyzer.*`.
 
-**AC9 (offline / no network requests):** `font-family: system-ui, sans-serif` is used; no CDN or external resource references exist anywhere in the diff.
+**AC9 (app.js no analysis logic):** `app.js` contains only DOM wiring, formatting helpers (`formatReadingTime`), and delegation to `TextAnalyzer.*`. No text-analysis computation is performed directly.
 
-**AC10 (spec doc):** `docs/specs/COM-13.md` is updated with the ticket key, objective summary, file inventory, and all ten acceptance criteria verbatim from the plan.
+**AC10 (spec doc):** `docs/specs/COM-13.md` documents the feature, file responsibilities, the complete `TextAnalyzer` public API with signatures and return types, runtime notes, and all ten acceptance criteria verbatim.
 
 ---
 
@@ -203,4 +209,4 @@ All ten acceptance criteria are satisfied and all constraints are respected.
 - Rounds to approval: 1
 
 ---
-*Generated by ai-orchestrator on 2026-04-02T12:04:59Z*
+*Generated by ai-orchestrator on 2026-04-02T12:47:16Z*

@@ -5,79 +5,119 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Real-Time Text Analyzer</title>
     <link rel="stylesheet" href="style.css">
+    <script defer src="analyzer.js"></script>
+    <script defer src="app.js"></script>
   </head>
   <body>
-    <header class="site-header">
-      <div class="site-header__inner">
-        <p class="site-header__eyebrow">Offline Utility</p>
-        <h1>Real-Time Text Analyzer</h1>
-        <p class="site-header__summary">Type or paste text to inspect live writing stats without leaving the page.</p>
-      </div>
-    </header>
-
     <main class="app-shell">
+      <section class="hero">
+        <p class="hero__eyebrow">Offline Text Utility</p>
+        <h1>Real-Time Text Analyzer</h1>
+        <p class="hero__summary">Type or paste text to inspect live counts, reading pace, and repeated keywords with no server and no build step.</p>
+      </section>
+
       <section class="layout" aria-label="Text analyzer">
         <section class="panel panel--editor" aria-labelledby="text-input-label">
-          <div class="panel__heading">
-            <h2 id="text-input-label">Text Input</h2>
-            <p>Analysis updates on every keystroke and stays fully local to this browser tab.</p>
+          <div class="panel__header">
+            <div>
+              <h2 id="text-input-label">Text Input</h2>
+              <p>Statistics update on every keystroke and stay entirely local to this page.</p>
+            </div>
+            <div class="panel__actions">
+              <button id="copy-stats-button" class="button button--secondary" type="button">Copy Stats</button>
+              <button id="clear-button" class="button" type="button">Clear</button>
+            </div>
           </div>
+
+          <label class="sr-only" for="text-input">Enter text to analyze</label>
           <textarea
             id="text-input"
+            rows="16"
+            maxlength="5000"
             placeholder="Start typing here to see the statistics update in real time..."
           ></textarea>
+
+          <div class="editor-footer">
+            <div class="progress-meta">
+              <div class="progress-label-row">
+                <span>Character Limit</span>
+                <span id="char-progress-label">0 / 5000</span>
+              </div>
+              <div class="progress-track" aria-hidden="true">
+                <div id="char-progress-bar" class="progress-bar"></div>
+              </div>
+              <p id="char-warning" class="status-message" role="status" aria-live="polite"></p>
+            </div>
+            <p id="copy-status" class="status-message status-message--align-right" role="status" aria-live="polite"></p>
+          </div>
         </section>
 
         <section class="panel panel--stats" aria-labelledby="stats-heading">
-          <div class="panel__heading">
-            <h2 id="stats-heading">Statistics</h2>
-            <p>Counts, reading pace, and repeated vocabulary refresh instantly.</p>
+          <div class="panel__header panel__header--stacked">
+            <div>
+              <h2 id="stats-heading">Live Statistics</h2>
+              <p>Core writing metrics refresh immediately. Keywords update after a short pause.</p>
+            </div>
           </div>
 
           <div class="stats-grid">
             <div class="stat-card">
+              <span id="stat-characters" class="stat-value">0</span>
               <span class="stat-label">Characters</span>
-              <span class="stat-value" data-stat="charCount">0</span>
             </div>
             <div class="stat-card">
-              <span class="stat-label">Characters (No Spaces)</span>
-              <span class="stat-value" data-stat="charCountNoSpaces">0</span>
+              <span id="stat-characters-no-spaces" class="stat-value">0</span>
+              <span class="stat-label">Characters Without Spaces</span>
             </div>
             <div class="stat-card">
+              <span id="stat-words" class="stat-value">0</span>
               <span class="stat-label">Words</span>
-              <span class="stat-value" data-stat="wordCount">0</span>
             </div>
             <div class="stat-card">
+              <span id="stat-sentences" class="stat-value">0</span>
               <span class="stat-label">Sentences</span>
-              <span class="stat-value" data-stat="sentenceCount">0</span>
             </div>
             <div class="stat-card">
+              <span id="stat-paragraphs" class="stat-value">0</span>
               <span class="stat-label">Paragraphs</span>
-              <span class="stat-value" data-stat="paragraphCount">0</span>
             </div>
             <div class="stat-card">
-              <span class="stat-label">Reading Time</span>
-              <span class="stat-value" data-stat="readingTime">&lt; 1 min</span>
+              <span id="stat-reading-time" class="stat-value">0 sec</span>
+              <span class="stat-label">Estimated Reading Time</span>
             </div>
             <div class="stat-card">
+              <span id="stat-average-word-length" class="stat-value">0.0</span>
               <span class="stat-label">Average Word Length</span>
-              <span class="stat-value" data-stat="avgWordLength">0</span>
+            </div>
+            <div class="stat-card">
+              <span id="stat-unique-words" class="stat-value">0</span>
+              <span class="stat-label">Unique Words</span>
             </div>
           </div>
 
-          <section class="top-words-section" aria-labelledby="top-words-heading">
-            <div class="panel__heading panel__heading--compact">
-              <h2 id="top-words-heading">Top 5 Words</h2>
-              <p>Common stop words are excluded from the ranking.</p>
+          <section id="keyword-section" class="keywords-section" aria-labelledby="keywords-heading">
+            <div class="panel__header panel__header--stacked panel__header--compact">
+              <div>
+                <h2 id="keywords-heading">Top Keywords</h2>
+                <p>Common stop words are excluded from this top-10 frequency list.</p>
+              </div>
             </div>
-            <ol id="top-words" class="top-words">
-            </ol>
+
+            <div class="table-wrap">
+              <table class="keyword-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Keyword</th>
+                    <th scope="col">Count</th>
+                  </tr>
+                </thead>
+                <tbody id="keyword-table-body"></tbody>
+              </table>
+              <p id="keyword-empty-state" class="keyword-empty-state">Start typing to see keywords…</p>
+            </div>
           </section>
         </section>
       </section>
     </main>
-
-    <script src="analyzer.js"></script>
-    <script src="app.js"></script>
   </body>
 </html>
