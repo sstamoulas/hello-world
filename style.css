@@ -256,6 +256,50 @@ output {
   margin-top: var(--space-4);
 }
 
+.settings-row {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  margin-top: var(--space-4);
+}
+
+.setting-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-card);
+}
+
+.setting-label {
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+#word-goal-input {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 0.9rem;
+  padding: 0.8rem 0.95rem;
+  background: var(--color-surface-strong);
+  color: var(--color-text);
+  box-shadow: inset 0 1px 0 var(--color-input-shadow);
+}
+
+#word-goal-input::placeholder {
+  color: var(--color-text-placeholder);
+}
+
+#word-goal-input:focus-visible {
+  outline: 3px solid var(--color-primary-soft);
+  outline-offset: 2px;
+}
+
 .clear-action {
   display: inline-flex;
   align-items: center;
@@ -386,6 +430,24 @@ output {
   margin-top: var(--space-4);
 }
 
+.goal-progress {
+  margin-top: var(--space-4);
+  padding: 0.9rem 1rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: rgba(141, 202, 182, 0.08);
+  color: var(--color-text);
+}
+
+.goal-progress.goal-active {
+  border-color: var(--color-border);
+}
+
+.goal-progress.goal-reached {
+  border-color: var(--color-progress);
+  background: rgba(45, 138, 93, 0.16);
+}
+
 .results-actions {
   margin-top: var(--space-4);
 }
@@ -463,6 +525,10 @@ output {
   .progress-header {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .settings-row {
+    grid-template-columns: 1fr;
   }
 
   .stats-grid {

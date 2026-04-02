@@ -3,6 +3,7 @@
 
   var SOFT_LIMIT = 5000;
   var THEME_STORAGE_KEY = "theme";
+  var WORD_GOAL_STORAGE_KEY = "wordCountGoal";
   var THEME_CLASS_MAP = {
     dark: "",
     light: "light-mode",
@@ -87,10 +88,54 @@
     var copyButton = document.getElementById("copy-btn");
     var progressBar = document.getElementById("progress-bar");
     var themeToggle = document.getElementById("theme-toggle");
+    var wordGoalInput = document.getElementById("word-goal-input");
+    var wordGoalIndicator = document.getElementById("word-goal-indicator");
+    var wordCountOutput = document.querySelector('[data-stat="wordCount"]');
     var outputs = document.querySelectorAll("[data-stat]");
     var topWordsOutput = document.querySelector('[data-stat="topWords"]');
     var currentTheme = getStoredTheme();
     var copyResetTimer = null;
+
+    function getCurrentWordCount() {
+      return Number(getOutputText(wordCountOutput)) || 0;
+    }
+
+    function getWordGoalValue() {
+      var goal = Number(wordGoalInput.value);
+
+      if (!goal || goal < 1) {
+        return 0;
+      }
+
+      return Math.floor(goal);
+    }
+
+    function updateWordGoalIndicator(currentWordCount) {
+      var goal = getWordGoalValue();
+      var wordCount = typeof currentWordCount === "number" ? currentWordCount : getCurrentWordCount();
+      var percentage;
+
+      if (!goal) {
+        wordGoalIndicator.hidden = true;
+        wordGoalIndicator.textContent = "";
+        wordGoalIndicator.classList.remove("goal-active");
+        wordGoalIndicator.classList.remove("goal-reached");
+        return;
+      }
+
+      percentage = Math.min(100, Math.round((wordCount / goal) * 100));
+
+      wordGoalIndicator.hidden = false;
+      wordGoalIndicator.classList.add("goal-active");
+      wordGoalIndicator.classList.toggle("goal-reached", wordCount >= goal);
+
+      if (wordCount >= goal) {
+        wordGoalIndicator.textContent = "\u2713 Word goal reached! " + String(wordCount) + " / " + String(goal) + " words";
+        return;
+      }
+
+      wordGoalIndicator.textContent = "Aiming for " + String(goal) + " words \u2014 " + String(wordCount) + " / " + String(goal) + " (" + String(percentage) + "%)";
+    }
 
     function clearCopyResetTimer() {
       if (copyResetTimer) {
@@ -218,6 +263,7 @@
       }
 
       updateProgress(analysis.charCount);
+      updateWordGoalIndicator(analysis.wordCount);
       setCopyButtonIdleState();
     }
 
@@ -233,6 +279,20 @@
 
     textarea.addEventListener("input", function () {
       render(textarea.value);
+    });
+
+    wordGoalInput.addEventListener("input", function () {
+      var goal = Math.floor(Number(wordGoalInput.value));
+
+      if (!goal || goal < 1) {
+        wordGoalInput.value = "";
+        localStorage.removeItem(WORD_GOAL_STORAGE_KEY);
+      } else {
+        wordGoalInput.value = String(goal);
+        localStorage.setItem(WORD_GOAL_STORAGE_KEY, wordGoalInput.value);
+      }
+
+      updateWordGoalIndicator();
     });
 
     document.addEventListener("keydown", function (event) {
@@ -255,6 +315,14 @@
     copyButton.addEventListener("click", function () {
       copyToClipboard();
     });
+
+    (function restoreWordGoal() {
+      var storedWordGoal = Number(localStorage.getItem(WORD_GOAL_STORAGE_KEY));
+
+      if (storedWordGoal && storedWordGoal > 0) {
+        wordGoalInput.value = String(Math.floor(storedWordGoal));
+      }
+    }());
 
     render(textarea.value);
   });
